@@ -1,155 +1,113 @@
-# MCP-dump
+<div align="center">
+  <img src="docs/assets/readme-icon.svg" width="128" alt="MCP Dump icon showing connected protocol nodes" />
+  <h1>MCP Dump</h1>
+  <p><strong>Small MCP servers and clients for comparing Python, Cloudflare Workers, and agent integration patterns.</strong></p>
+  <p>Experimental learning repository; not a production-ready MCP distribution.</p>
 
-A collection of Model Context Protocol (MCP) servers, clients, and experiments for learning, prototyping, and comparing implementation styles across runtimes (Cloudflare Workers, Python, etc.).
+  [![Python 3.13+](https://img.shields.io/badge/Python-3.13%2B-3776AB?logo=python&logoColor=white)](mcp-files/pyproject.toml)
+  [![TypeScript](https://img.shields.io/badge/TypeScript-Cloudflare%20Worker-3178C6?logo=typescript&logoColor=white)](mcp-hello/package.json)
+  [![Status: experimental](https://img.shields.io/badge/status-experimental-B54A32)](#project-status)
 
-## Table of Contents
+  [What is it?](#what-is-it) · [Quick start](#quick-start) · [Experiments](#experiments) · [Architecture](#architecture) · [Limitations](#limitations)
+</div>
 
-1. Overview
-2. Repository Structure
-3. What is MCP?
-4. Project Summaries
-5. Quick Start
-6. Development Environment
-7. Contributing
-8. Disclaimer
+<p align="center">
+  <img src="docs/assets/readme-cover.svg" width="960" alt="MCP Dump paperback cover describing the repository as local MCP experiments" />
+</p>
 
----
+## What is it?
 
-## 1. Overview
+MCP Dump is a collection of independent Model Context Protocol experiments for developers learning how MCP servers, clients, and agent loops fit together. Its most complete path is a Python FastMCP server that confines file operations to a configured workspace.
 
-This monorepo hosts multiple MCP server and client implementations exploring different tooling stacks (Python + `uv`, TypeScript + Cloudflare Workers) and agent patterns (LLM-backed analysis, reactive agents, tool invocation). It is intended as a playground and reference.
+The repository also contains a TypeScript Cloudflare Worker, Gemini and LangGraph client examples, and an Azure OpenAI agent that expects an external Postgres MCP server. These samples do not form one deployable application, and their maturity varies.
 
-## 2. Repository Structure
+## Quick start
 
-```
-MCP-dump/
-├── ai-agent-postgres-mcp/        # AI agent using MCP to analyze a Postgres database
-│   ├── ai_agent_postgres_mcp.ipynb
-│   ├── main.py
-│   └── README.md
-├── mcp-hello/                    # Minimal MCP server (Cloudflare Workers / JS)
-│   ├── src/
-│   ├── test/
-│   ├── package.json
-│   └── README.md
-├── mcp-files/                    # New Python MCP workspace (managed via uv)
-│   ├── pyproject.toml            # Root Python project (workspace style)
-│   ├── uv.lock
-│   ├── examples/                 # Example Python clients & agents
-│   │   └── clients/
-│   │       ├── base.py
-│   │       ├── gemini.py
-│   │       └── react_agent.py
-│   ├── mcp-server/               # Python MCP server implementation
-│   │   ├── pyproject.toml
-│   │   └── src/mcp_server/
-│   │       ├── cli.py
-│   │       ├── config.py
-│   │       ├── helpers.py
-│   │       ├── mcp.py
-│   │       ├── tools.py
-│   │       └── __init__.py
-│   └── mcp-hello/                # (Experimental) parallel minimal example in Python
-│       └── README.md
-└── README.md
-```
+The shortest self-contained path starts the Python file server. It requires [Python 3.13 or newer](mcp-files/pyproject.toml) and [\`uv\`](https://docs.astral.sh/uv/).
 
-> Note: `mcp-files/mcp-hello` is a Python-flavored minimal example separate from the root `mcp-hello` Cloudflare Workers implementation. They intentionally explore analogous concepts in different runtimes.
+\`\`\`bash
+git clone https://github.com/jayanth-mkv/mcp-dump.git
+cd mcp-dump/mcp-files
+uv sync
+uv run mcp-server --help
+uv run mcp-server
+\`\`\`
 
-## 3. What is MCP?
+The server listens on \`127.0.0.1:8000\` over SSE and confines tools to \`workspace/\` by default. Override those values when needed:
 
-Model Context Protocol (MCP) standardizes how tools, agents, and large language models exchange contextual information, resources, and tool invocation results. It aims to:
+\`\`\`bash
+uv run mcp-server --host 0.0.0.0 --port 9001 --workspace ./data
+\`\`\`
 
-- Provide predictable, typed exchanges
-- Reduce ad-hoc prompt engineering glue
-- Support richer, stateful multi-step agent behaviors
+The CLI also exposes \`http\` and \`stdio\` transports. There is no authentication layer, so do not expose the server to an untrusted network.
 
-## 4. Project Summaries
+## Experiments
 
-- `ai-agent-postgres-mcp`: Demonstrates connecting an AI agent to Postgres via MCP for conversational querying & analysis.
-- `mcp-hello` (Cloudflare / Workers): Minimal TypeScript MCP server showcasing deployment in edge environments.
-- `mcp-files/mcp-server`: A Python MCP server with tooling abstractions, CLI entrypoint, and strongly-typed helpers.
-- `mcp-files/examples/clients`: Example Python clients (including a basic reactive agent pattern and Gemini integration placeholder).
-- `mcp-files/mcp-hello`: Lightweight Python analogue of the Cloudflare example (experimental).
+| Path | Status | What the code implements |
+| --- | --- | --- |
+| [\`mcp-files/mcp-server\`](mcp-files/mcp-server/) | Implemented, experimental | FastMCP server with 14 file, directory, search, metadata, and workspace-stat tools. |
+| [\`mcp-files/examples/clients\`](mcp-files/examples/clients/) | Experimental | Plain FastMCP, Gemini, and LangGraph client examples targeting the local SSE server. |
+| [\`mcp-hello\`](mcp-hello/) | Implemented, experimental | Cloudflare Worker methods for a greeting and current time, routed through \`workers-mcp\`. |
+| [\`mcp-postgres\`](mcp-postgres/) | Experimental, service-dependent | Azure OpenAI ReAct agent that loads tools from a separately hosted Postgres MCP endpoint. |
+| [\`mcp-files/mcp-hello\`](mcp-files/mcp-hello/) | Documentation stub | Notes for the Worker example; the TypeScript implementation itself is at the repository root. |
 
-## 5. Quick Start
+### Python file tools
 
-### A. Cloudflare Workers MCP server (`mcp-hello` root)
-1. Enter the directory:
-    ```bash
-    cd mcp-hello
-    ```
-2. Install deps (pnpm / npm / yarn):
-    ```bash
-    npm install
-    ```
-3. Run tests:
-    ```bash
-    npm test
-    ```
-4. (Optional) Publish / dev with Wrangler:
-    ```bash
-    npx wrangler dev
-    ```
+The local server implements these outcomes:
 
-### B. Python MCP workspace (`mcp-files`)
-This workspace uses [`uv`](https://github.com/astral-sh/uv) for fast resolution & execution.
+- Create, read, overwrite, append, copy, move, rename, and delete paths.
+- List files and directories, search a text file, and check whether a path exists.
+- Return file metadata and aggregate workspace statistics as JSON.
+- Reject paths that resolve outside the configured workspace.
 
-1. Navigate:
-    ```bash
-    cd mcp-files
-    ```
-2. Run the Python MCP server (CLI):
-    ```bash
-    uv run mcp-server
-    ```
-3. Try a client example (reactive agent):
-    ```bash
-    uv run examples/clients/react_agent.py
-    ```
-4. Explore available tools by invoking help:
-    ```bash
-    uv run mcp-server --help
-    ```
+\`delete_path\` recursively removes directories inside that workspace. Treat access to the server as write access to the configured directory.
 
-### C. Postgres AI Agent (`ai-agent-postgres-mcp`)
-Follow its local `README.md` for database connection setup. Typically you'll:
-```bash
-cd ai-agent-postgres-mcp
-uv run main.py  # or python main.py depending on your environment
-```
+### Optional agent clients
 
-## 6. Development Environment
+Start the file server first, then set \`GOOGLE_API_KEY\` before running either Google-backed example:
 
-| Layer | Tech | Notes |
-|-------|------|-------|
-| Edge server | Cloudflare Workers | Uses `workers-mcp` + Wrangler dev server |
-| Python server | uv + pyproject | Fast lockfile (`uv.lock`), typed package layout |
-| Tooling | LLM clients (Gemini placeholder) | Extend via `tools.py` in Python server |
+\`\`\`bash
+cd mcp-files
+uv run examples/clients/gemini.py
+# or
+uv run examples/clients/react_agent.py
+\`\`\`
 
-Recommended:
-- Install `uv` for Python: https://docs.astral.sh/uv/
-- Keep commits atomic (feature / chore / docs) using Conventional Commits.
-- Use `uv lock --upgrade` when updating deps in Python workspace.
+The Postgres example separately requires Azure OpenAI credentials and \`MCP_RENDER_URL\`; it does not include or start the Postgres MCP server it connects to.
 
-## 7. Contributing
+## Architecture
 
-Contributions are welcome. Suggested contribution types:
-- New MCP tool modules (`mcp-files/mcp-server/src/mcp_server/tools.py`)
-- Additional runtime adapters (Rust, Go, etc.)
-- Agent strategy examples (planning, retrieval-augmented, streaming)
-- Documentation improvements & diagrams
+<p align="center">
+  <img src="docs/assets/readme-architecture.svg" width="1000" alt="MCP Dump architecture from caller through a selected runtime and MCP boundary to tool results" />
+</p>
 
-Workflow:
-1. Fork & branch from `main`.
-2. Implement + add minimal docs/tests.
-3. Run lint/tests (where applicable).
-4. Open PR with clear description and rationale.
+Each experiment chooses a different entry point and transport, but the implemented direction is the same: a caller reaches an MCP boundary, invokes the tools supplied by that sample, and receives a runtime-specific result.
 
-## 8. Disclaimer
+## Project status
 
-These implementations are experimental and not guaranteed production-grade. Security, robustness, and performance concerns may be intentionally simplified for clarity.
+This is an experiment collection, not a versioned product. Before building on it, note these checked-in mismatches:
 
----
+- \`mcp-files/examples/clients/base.py\` calls \`create_file\` with \`filename\`, while the server tool requires \`path\`.
+- The Cloudflare Worker tests still assert the starter response \`Hello World!\`; the current worker instead delegates requests through \`ProxyToSelf\`.
+- There is no root command that installs, runs, or tests every experiment.
+- Some nested documentation describes files that live elsewhere in the repository.
 
-If you find this useful, feel free to open issues with questions or ideas for additional MCP experiment directions.
+## Limitations
+
+- The file server has no authentication, authorization policy, quotas, or automated tests.
+- Text tools assume UTF-8 and are not designed for binary or very large files.
+- The Gemini, LangGraph, Azure OpenAI, Postgres MCP, and Cloudflare paths require external credentials or services.
+- The Postgres example has no local dependency manifest, so its environment is not reproducible from that folder alone.
+- Only \`mcp-files/\` includes a license file; the repository root does not currently state reuse terms for the full collection.
+
+## Development
+
+The TypeScript sample declares its checks in [\`mcp-hello/package.json\`](mcp-hello/package.json):
+
+\`\`\`bash
+cd mcp-hello
+npm ci
+npm test -- --run
+\`\`\`
+
+Update the stale Worker assertions before treating that test command as a passing verification gate. New Python tools belong in [\`tools.py\`](mcp-files/mcp-server/src/mcp_server/tools.py) and should include focused tests for path confinement and destructive operations.
