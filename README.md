@@ -1,7 +1,7 @@
 <div align="center">
   <img src="docs/assets/readme-icon.svg" width="128" alt="MCP Dump icon showing connected protocol nodes" />
   <h1>MCP Dump</h1>
-  <p><strong>Small MCP servers and clients for comparing Python, Cloudflare Workers, and agent integration patterns.</strong></p>
+  <p><strong>Small MCP servers, clients, and experiments for building agent-tool integrations.</strong></p>
   <p>Experimental learning repository; not a production-ready MCP distribution.</p>
 
   [![Python 3.13+](https://img.shields.io/badge/Python-3.13%2B-3776AB?logo=python&logoColor=white)](mcp-files/pyproject.toml)
@@ -18,7 +18,7 @@
 
 ## What is it?
 
-MCP Dump is a collection of independent Model Context Protocol experiments for developers learning how MCP servers, clients, and agent loops fit together. Its most complete path is a Python FastMCP server that confines file operations to a configured workspace.
+MCP Dump is a collection of independent Model Context Protocol experiments for developers learning how agent-tool interfaces, servers, and clients fit together. Its most complete current path is a Python FastMCP server that confines file operations to a configured workspace.
 
 The repository also contains a standalone email-validation MCP, a TypeScript Cloudflare Worker, Gemini and LangGraph client examples, and an Azure OpenAI agent that expects an external Postgres MCP server. These samples do not form one deployable application, and their maturity varies.
 
