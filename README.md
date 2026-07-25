@@ -22,6 +22,8 @@ MCP Dump is a collection of independent Model Context Protocol experiments for d
 
 The repository also contains a standalone email-validation MCP, a TypeScript Cloudflare Worker, Gemini and LangGraph client examples, and an Azure OpenAI agent that expects an external Postgres MCP server. These samples do not form one deployable application, and their maturity varies.
 
+Experiments, runtimes, and integrations may change as the collection grows. Each entry remains independently documented so its current capabilities and limitations are clear.
+
 ## Quick start
 
 The shortest self-contained path starts the Python file server. It requires [Python 3.13 or newer](mcp-files/pyproject.toml) and [\`uv\`](https://docs.astral.sh/uv/).
