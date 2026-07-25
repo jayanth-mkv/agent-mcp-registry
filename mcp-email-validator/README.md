@@ -16,8 +16,8 @@ The returned `smtp_status` is `not_requested`, `accepted`, `rejected`, `unavaila
 Requirements: Python 3.13+ and [uv](https://docs.astral.sh/uv/).
 
 ```bash
-git clone https://github.com/jayanth-mkv/mcp-dump.git
-cd mcp-dump/mcp-email-validator
+git clone https://github.com/jayanth-mkv/agent-mcp-registry.git
+cd agent-mcp-registry/mcp-email-validator
 uv sync
 uv run mcp-email-validator --transport stdio
 ```

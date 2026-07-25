@@ -1,42 +1,42 @@
 <div align="center">
-  <img src="docs/assets/readme-icon.svg" width="128" alt="MCP Dump icon showing connected protocol nodes" />
-  <h1>MCP Dump</h1>
-  <p><strong>An evolving catalog of MCP servers, clients, and experiments for building agent-tool integrations.</strong></p>
-  <p>Experimental learning repository; not a production-ready MCP distribution.</p>
+  <img src="docs/assets/readme-icon.svg" width="128" alt="Agent MCP Registry icon showing connected protocol nodes" />
+  <h1>Agent MCP Registry</h1>
+  <p><strong>A growing catalog of MCP servers, clients, and integration patterns for agent-tool systems.</strong></p>
+  <p>Current entries are experimental samples, not a production-ready MCP distribution.</p>
 
   [![Python 3.13+](https://img.shields.io/badge/Python-3.13%2B-3776AB?logo=python&logoColor=white)](mcp-files/pyproject.toml)
   [![Email validation MCP](https://img.shields.io/badge/MCP-email%20validation-3776AB)](mcp-email-validator/)
   [![TypeScript](https://img.shields.io/badge/TypeScript-Cloudflare%20Worker-3178C6?logo=typescript&logoColor=white)](mcp-hello/package.json)
   [![Status: experimental](https://img.shields.io/badge/status-experimental-B54A32)](#project-status)
 
-  [What is it?](#what-is-it) · [Quick start](#quick-start) · [Experiments](#experiments) · [Architecture](#architecture) · [Limitations](#limitations)
+  [What is it?](#what-is-it) · [Quick start](#quick-start) · [Current catalog](#current-catalog) · [Architecture](#architecture) · [Limitations](#limitations)
 </div>
 
 <p align="center">
-  <img src="docs/assets/readme-cover.svg" width="960" alt="MCP Dump paperback cover describing the repository as local MCP experiments" />
+  <img src="docs/assets/readme-cover.svg" width="960" alt="Agent MCP Registry cover describing independently documented MCP implementations" />
 </p>
 
 ## What is it?
 
-MCP Dump is a collection of independent Model Context Protocol experiments for developers learning how agent-tool interfaces, servers, and clients fit together. Its most complete current path is a Python FastMCP server that confines file operations to a configured workspace.
+Agent MCP Registry is a growing collection of independently documented Model Context Protocol implementations and integration patterns. It is for developers exploring how agent-tool interfaces, servers, and clients fit together. Its most complete current path is a Python FastMCP server that confines file operations to a configured workspace.
 
 The repository also contains a standalone email-validation MCP, a TypeScript Cloudflare Worker, Gemini and LangGraph client examples, and an Azure OpenAI agent that expects an external Postgres MCP server. These samples do not form one deployable application, and their maturity varies.
 
-Experiments, runtimes, and integrations may change as the collection grows. Each entry remains independently documented so its current capabilities and limitations are clear.
+Entries, runtimes, and integrations may change as the registry grows. Each entry remains independently documented so its current capabilities and limitations are clear.
 
 ## Catalog direction
 
-MCP Dump grows through self-contained examples that make one integration idea easy to inspect, adapt, or replace. Future entries can cover local and hosted servers, client patterns, tool safety, evaluation helpers, and deployment approaches.
+The registry grows through self-contained entries that make one integration idea easy to inspect, adapt, or replace. Future entries can cover local and hosted servers, client patterns, tool safety, evaluation helpers, and deployment approaches.
 
-Only checked-in, documented implementations are presented as available. The experiment table below is the source of truth for what the repository currently contains.
+Only checked-in, documented implementations are presented as available. The catalog below is the source of truth for what the repository currently contains.
 
 ## Quick start
 
 The shortest self-contained path starts the Python file server. It requires [Python 3.13 or newer](mcp-files/pyproject.toml) and [\`uv\`](https://docs.astral.sh/uv/).
 
 \`\`\`bash
-git clone https://github.com/jayanth-mkv/mcp-dump.git
-cd mcp-dump/mcp-files
+git clone https://github.com/jayanth-mkv/agent-mcp-registry.git
+cd agent-mcp-registry/mcp-files
 uv sync
 uv run mcp-server --help
 uv run mcp-server
@@ -60,7 +60,7 @@ uv sync
 uv run mcp-email-validator --transport stdio
 \`\`\`
 
-## Experiments
+## Current catalog
 
 | Path | Status | What the code implements |
 | --- | --- | --- |
@@ -98,14 +98,14 @@ The Postgres example separately requires Azure OpenAI credentials and \`MCP_REND
 ## Architecture
 
 <p align="center">
-  <img src="docs/assets/readme-architecture.svg" width="1000" alt="MCP Dump architecture from caller through a selected runtime and MCP boundary to tool results" />
+  <img src="docs/assets/readme-architecture.svg" width="1000" alt="Agent MCP Registry architecture from caller through a selected runtime and MCP boundary to tool results" />
 </p>
 
-Each experiment chooses a different entry point and transport, but the implemented direction is the same: a caller reaches an MCP boundary, invokes the tools supplied by that sample, and receives a runtime-specific result.
+Each catalog entry chooses a different entry point and transport, but the implemented direction is the same: a caller reaches an MCP boundary, invokes the tools supplied by that entry, and receives a runtime-specific result.
 
-## Project status
+## Maturity and gaps
 
-This is an experiment collection, not a versioned product. Before building on it, note these checked-in mismatches:
+This registry is still maturing, not a versioned product. Before building on it, note these checked-in mismatches:
 
 - \`mcp-files/examples/clients/base.py\` calls \`create_file\` with \`filename\`, while the server tool requires \`path\`.
 - The Cloudflare Worker tests still assert the starter response \`Hello World!\`; the current worker instead delegates requests through \`ProxyToSelf\`.
