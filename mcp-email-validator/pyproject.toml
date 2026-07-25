@@ -1,0 +1,18 @@
+[project]
+name = "mcp-email-validator"
+version = "0.1.0"
+description = "A safety-bounded MCP server for email syntax, DNS, and opt-in SMTP checks"
+readme = "README.md"
+requires-python = ">=3.13"
+license = { file = "LICENSE" }
+dependencies = [
+  "dnspython>=2.6.1",
+  "fastmcp>=2.12.3",
+]
+
+[project.scripts]
+mcp-email-validator = "mcp_email_validator.cli:main"
+
+[build-system]
+requires = ["uv_build>=0.8.15,<0.9.0"]
+build-backend = "uv_build"

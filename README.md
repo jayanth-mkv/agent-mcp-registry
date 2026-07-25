@@ -5,6 +5,7 @@
   <p>Experimental learning repository; not a production-ready MCP distribution.</p>
 
   [![Python 3.13+](https://img.shields.io/badge/Python-3.13%2B-3776AB?logo=python&logoColor=white)](mcp-files/pyproject.toml)
+  [![Email validation MCP](https://img.shields.io/badge/MCP-email%20validation-3776AB)](mcp-email-validator/)
   [![TypeScript](https://img.shields.io/badge/TypeScript-Cloudflare%20Worker-3178C6?logo=typescript&logoColor=white)](mcp-hello/package.json)
   [![Status: experimental](https://img.shields.io/badge/status-experimental-B54A32)](#project-status)
 
@@ -19,7 +20,7 @@
 
 MCP Dump is a collection of independent Model Context Protocol experiments for developers learning how MCP servers, clients, and agent loops fit together. Its most complete path is a Python FastMCP server that confines file operations to a configured workspace.
 
-The repository also contains a TypeScript Cloudflare Worker, Gemini and LangGraph client examples, and an Azure OpenAI agent that expects an external Postgres MCP server. These samples do not form one deployable application, and their maturity varies.
+The repository also contains a standalone email-validation MCP, a TypeScript Cloudflare Worker, Gemini and LangGraph client examples, and an Azure OpenAI agent that expects an external Postgres MCP server. These samples do not form one deployable application, and their maturity varies.
 
 ## Quick start
 
@@ -41,11 +42,22 @@ uv run mcp-server --host 0.0.0.0 --port 9001 --workspace ./data
 
 The CLI also exposes \`http\` and \`stdio\` transports. There is no authentication layer, so do not expose the server to an untrusted network.
 
+### Email-validation MCP
+
+The independent [\`mcp-email-validator\`](mcp-email-validator/) server checks syntax and DNS mail routes without sending email. Its SMTP recipient probe is disabled by default and should only be enabled for addresses and infrastructure you are authorized to assess.
+
+\`\`\`bash
+cd mcp-email-validator
+uv sync
+uv run mcp-email-validator --transport stdio
+\`\`\`
+
 ## Experiments
 
 | Path | Status | What the code implements |
 | --- | --- | --- |
 | [\`mcp-files/mcp-server\`](mcp-files/mcp-server/) | Implemented, experimental | FastMCP server with 14 file, directory, search, metadata, and workspace-stat tools. |
+| [\`mcp-email-validator\`](mcp-email-validator/) | Implemented, experimental | FastMCP server for syntax, DNS mail-route, and bounded opt-in SMTP recipient checks. |
 | [\`mcp-files/examples/clients\`](mcp-files/examples/clients/) | Experimental | Plain FastMCP, Gemini, and LangGraph client examples targeting the local SSE server. |
 | [\`mcp-hello\`](mcp-hello/) | Implemented, experimental | Cloudflare Worker methods for a greeting and current time, routed through \`workers-mcp\`. |
 | [\`mcp-postgres\`](mcp-postgres/) | Experimental, service-dependent | Azure OpenAI ReAct agent that loads tools from a separately hosted Postgres MCP endpoint. |
@@ -95,10 +107,11 @@ This is an experiment collection, not a versioned product. Before building on it
 ## Limitations
 
 - The file server has no authentication, authorization policy, quotas, or automated tests.
+- The email-validation server is not a mailbox-ownership or deliverability guarantee; SMTP probing is opt-in, bounded, and can be affected by catch-all or anti-abuse behavior.
 - Text tools assume UTF-8 and are not designed for binary or very large files.
 - The Gemini, LangGraph, Azure OpenAI, Postgres MCP, and Cloudflare paths require external credentials or services.
 - The Postgres example has no local dependency manifest, so its environment is not reproducible from that folder alone.
-- Only \`mcp-files/\` includes a license file; the repository root does not currently state reuse terms for the full collection.
+- \`mcp-files/\` and \`mcp-email-validator/\` include their own license files; the repository root does not currently state reuse terms for the full collection.
 
 ## Development
 
