@@ -1,0 +1,6 @@
+# Local Worker state and secrets
+.wrangler/
+.dev.vars
+.dev.vars.*
+*.log
+*.tsbuildinfo
