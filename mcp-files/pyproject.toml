@@ -1,5 +1,5 @@
 [project]
-name = "agent-mcp-registry-files"
+name = "mcp-files-context"
 version = "0.2.0"
 description = "MCP tools for text files inside a configured local workspace"
 readme = "README.md"

@@ -61,21 +61,21 @@ class ReleaseTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             release.select("pull_request", "refs/heads/main", "mcp-files", self.root)
 
-    def artifacts(self, *, wheel_name="agent-mcp-registry-files", wheel_version="0.2.0", source_name="agent-mcp-registry-files", source_version="0.2.0", entry="server.cli:main", extra=None):
+    def artifacts(self, *, wheel_name="mcp-files-context", wheel_version="0.2.0", source_name="mcp-files-context", source_version="0.2.0", entry="server.cli:main", extra=None):
         directory = self.root / "dist"
         directory.mkdir()
-        wheel = directory / "agent_mcp_registry_files-0.2.0-py3-none-any.whl"
-        info = "agent_mcp_registry_files-0.2.0.dist-info"
+        wheel = directory / "mcp_files_context-0.2.0-py3-none-any.whl"
+        info = "mcp_files_context-0.2.0.dist-info"
         with zipfile.ZipFile(wheel, "w") as archive:
             archive.writestr(f"{info}/METADATA", f"Name: {wheel_name}\nVersion: {wheel_version}\nRequires-Python: >=3.13\n\n")
             archive.writestr(f"{info}/entry_points.txt", f"[console_scripts]\nmcp-files = {entry}\n")
             archive.writestr(f"{info}/licenses/LICENSE", "MIT")
             if extra:
                 archive.writestr(extra, "local data")
-        with tarfile.open(directory / "agent_mcp_registry_files-0.2.0.tar.gz", "w:gz") as archive:
+        with tarfile.open(directory / "mcp_files_context-0.2.0.tar.gz", "w:gz") as archive:
             for name, content in {
-                "agent_mcp_registry_files-0.2.0/PKG-INFO": f"Name: {source_name}\nVersion: {source_version}\nRequires-Python: >=3.13\n\n",
-                "agent_mcp_registry_files-0.2.0/LICENSE": "MIT",
+                "mcp_files_context-0.2.0/PKG-INFO": f"Name: {source_name}\nVersion: {source_version}\nRequires-Python: >=3.13\n\n",
+                "mcp_files_context-0.2.0/LICENSE": "MIT",
             }.items():
                 data = content.encode()
                 member = tarfile.TarInfo(name)

@@ -17,7 +17,7 @@ import zipfile
 
 PACKAGES = ("mcp-files", "mcp-email-validator")
 DISTRIBUTIONS = {
-    "mcp-files": "agent-mcp-registry-files",
+    "mcp-files": "mcp-files-context",
     "mcp-email-validator": "mcp-email-validator",
 }
 ENVIRONMENTS = {"mcp-files": "pypi-files", "mcp-email-validator": "pypi"}

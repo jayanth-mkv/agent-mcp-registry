@@ -2,7 +2,17 @@
 
 An MCP server for checking email syntax and DNS mail routes without sending a message. Optional SMTP probing provides a recipient acceptance signal; it does not prove ownership or guarantee delivery.
 
-## Run without cloning
+## Install a published release
+
+Requires [uv](https://docs.astral.sh/uv/getting-started/installation/):
+
+```bash
+uvx --python 3.13 mcp-email-validator@0.2.0
+```
+
+Published versions are listed on [PyPI](https://pypi.org/project/mcp-email-validator/). If the version is not available yet, use the GitHub command below. Publishing is managed through [GitHub Actions](https://github.com/jayanth-mkv/agent-mcp-registry/blob/main/docs/publishing.md).
+
+## Run from GitHub without cloning
 
 Requires [uv](https://docs.astral.sh/uv/getting-started/installation/) and Git. uv downloads the selected package and manages Python 3.13 and its dependencies:
 
@@ -11,8 +21,6 @@ uvx --python 3.13 --from "git+https://github.com/jayanth-mkv/agent-mcp-registry.
 ```
 
 Only this MCP and its runtime dependencies are installed. uv fetches the repository internally; you do not need a local checkout. To pin the source, replace `main` with a release tag or full commit SHA.
-
-PyPI publishing is configured through GitHub Actions. After the first PyPI release is confirmed, the equivalent versioned command is `uvx --python 3.13 mcp-email-validator@0.2.0`. Until then, use the GitHub command above. See the [release guide](https://github.com/jayanth-mkv/agent-mcp-registry/blob/main/docs/publishing.md).
 
 ## Install from source
 

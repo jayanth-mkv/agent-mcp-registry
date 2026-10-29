@@ -2,7 +2,17 @@
 
 An MCP server with 14 tools for managing UTF-8 text files within a configured workspace. No API key or external service is required.
 
-## Run without cloning
+## Install a published release
+
+Requires [uv](https://docs.astral.sh/uv/getting-started/installation/). The distribution is `mcp-files-context`; the command is `mcp-files`:
+
+```bash
+uvx --python 3.13 --from mcp-files-context==0.2.0 mcp-files --workspace ./workspace
+```
+
+Published versions are listed on [PyPI](https://pypi.org/project/mcp-files-context/). If the version is not available yet, use the GitHub command below. Publishing is managed through [GitHub Actions](https://github.com/jayanth-mkv/agent-mcp-registry/blob/main/docs/publishing.md).
+
+## Run from GitHub without cloning
 
 Requires [uv](https://docs.astral.sh/uv/getting-started/installation/) and Git. uv downloads the selected package and manages Python 3.13 and its dependencies:
 
@@ -11,8 +21,6 @@ uvx --python 3.13 --from "git+https://github.com/jayanth-mkv/agent-mcp-registry.
 ```
 
 Only this MCP and its runtime dependencies are installed. uv fetches the repository internally; you do not need a local checkout. To pin the source, replace `main` with a release tag or full commit SHA.
-
-PyPI publishing is configured through GitHub Actions under the distribution name `agent-mcp-registry-files`; its command remains `mcp-files`. After the first PyPI release is confirmed, run `uvx --python 3.13 --from agent-mcp-registry-files==0.2.0 mcp-files --workspace ./workspace`. Until then, use the GitHub command above. See the [release guide](https://github.com/jayanth-mkv/agent-mcp-registry/blob/main/docs/publishing.md).
 
 ## Install from source
 

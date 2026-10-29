@@ -4,7 +4,7 @@ Each standalone MCP is a separate Python distribution. Publishing is performed b
 
 ## Initial status
 
-The repository contains the workflow and package metadata. The file server's distribution is named `agent-mcp-registry-files` because PyPI rejected `mcp-files` as too similar to an existing project; its console command and source directory remain `mcp-files`. The email distribution and command are both `mcp-email-validator`. The first publication and a successful installation from PyPI still need verification. Until then, use the GitHub-based commands in the [README](../README.md).
+The repository contains the workflow and package metadata. The file server's distribution is named `mcp-files-context` because PyPI rejected `mcp-files` as too similar to an existing project; its console command and source directory remain `mcp-files`. The email distribution and command are both `mcp-email-validator`. The first publication and a successful installation from PyPI still need verification. Until then, use the GitHub-based commands in the [README](../README.md).
 
 ## Connect PyPI once
 
@@ -12,7 +12,7 @@ Sign in to your PyPI account and open [account publishing settings](https://pypi
 
 | PyPI form field | File Server | Email Validator |
 | --- | --- | --- |
-| PyPI project name | `agent-mcp-registry-files` | `mcp-email-validator` |
+| PyPI project name | `mcp-files-context` | `mcp-email-validator` |
 | Owner | `jayanth-mkv` | `jayanth-mkv` |
 | Repository name | `agent-mcp-registry` | `agent-mcp-registry` |
 | Workflow filename | `publish.yml` | `publish.yml` |
@@ -58,7 +58,7 @@ Experimental examples are excluded. Plain version tags such as `v0.2.0`, ordinar
 After the corresponding PyPI version has been confirmed, users can run just that MCP without Git or a checkout:
 
 ```bash
-uvx --python 3.13 --from agent-mcp-registry-files==0.2.0 mcp-files --workspace ./workspace
+uvx --python 3.13 --from mcp-files-context==0.2.0 mcp-files --workspace ./workspace
 ```
 
 ```bash
@@ -72,7 +72,7 @@ For MCP clients supporting `mcpServers`, copy only the entry you need:
   "mcpServers": {
     "files": {
       "command": "uvx",
-      "args": ["--python", "3.13", "--from", "agent-mcp-registry-files==0.2.0", "mcp-files", "--workspace", "/absolute/path/allowed-files"]
+      "args": ["--python", "3.13", "--from", "mcp-files-context==0.2.0", "mcp-files", "--workspace", "/absolute/path/allowed-files"]
     },
     "email-validator": {
       "command": "uvx",
