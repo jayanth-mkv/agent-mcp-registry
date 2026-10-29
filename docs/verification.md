@@ -56,3 +56,16 @@ The Worker uses **@modelcontextprotocol/sdk 1.32.2**, **Wrangler 4.155.0**, **Ty
 - No Cloudflare deployment or public authenticated deployment was performed.
 
 Future upgrades should regenerate the appropriate lockfile and rerun the relevant checks. Test results and package versions above are a dated record.
+
+## PyPI release verification — 2026-10-30
+
+Both **0.2.0** releases were published by GitHub Actions from commit `c5b54f98f743ff7c88f171542c8b70985b6de88c`, using separate Trusted Publisher environments:
+
+| Distribution | Release tag | Environment | Publishing result |
+| --- | --- | --- | --- |
+| [mcp-files-context](https://pypi.org/project/mcp-files-context/0.2.0/) | `mcp-files-v0.2.0` | `pypi-files` | [Actions succeeded](https://github.com/jayanth-mkv/agent-mcp-registry/actions/runs/40934572264) |
+| [mcp-email-validator](https://pypi.org/project/mcp-email-validator/0.2.0/) | `mcp-email-validator-v0.2.0` | `pypi` | [Actions succeeded](https://github.com/jayanth-mkv/agent-mcp-registry/actions/runs/40934571806) |
+
+The [package-check run](https://github.com/jayanth-mkv/agent-mcp-registry/actions/runs/40934277454) passed all five jobs: 14 release-guard tests and each package's tests, builds, metadata checks, and isolated wheel installation on Linux and Windows. Each release workflow repeated the selected package's Linux and Windows verification before uploading its verified Linux distributions through OIDC. Publishing used package attestations and no stored PyPI API token.
+
+After publication, isolated installs from `https://pypi.org/simple` initialized both stdio servers and discovered the expected 14 file tools and 2 email tools. File creation/readback and workspace-root deletion rejection passed. Single and batch invalid-email calls passed without DNS or SMTP traffic. These checks used installed PyPI packages outside the repository, with no editable project environment.

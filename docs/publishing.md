@@ -2,9 +2,11 @@
 
 Each standalone MCP is a separate Python distribution. Publishing is performed by [publish.yml](../.github/workflows/publish.yml) through GitHub Actions and PyPI Trusted Publishing. No PyPI token is stored in GitHub or used locally.
 
-## Initial status
+## Published packages
 
-The repository contains the workflow and package metadata. The file server's distribution is named `mcp-files-context` because PyPI rejected `mcp-files` as too similar to an existing project; its console command and source directory remain `mcp-files`. The email distribution and command are both `mcp-email-validator`. The first publication and a successful installation from PyPI still need verification. Until then, use the GitHub-based commands in the [README](../README.md).
+Version **0.2.0** of both packages is published on PyPI: [mcp-files-context](https://pypi.org/project/mcp-files-context/0.2.0/) and [mcp-email-validator](https://pypi.org/project/mcp-email-validator/0.2.0/). Both were installed from public PyPI in isolation and verified through stdio MCP sessions and tool calls.
+
+The file server's distribution is named `mcp-files-context` because PyPI rejected `mcp-files` as too similar to an existing project; its console command and source directory remain `mcp-files`. The email distribution and command are both `mcp-email-validator`.
 
 ## Connect PyPI once
 
@@ -53,9 +55,9 @@ Each tag publishes only its named package. The workflow rejects tags whose versi
 
 Experimental examples are excluded. Plain version tags such as `v0.2.0`, ordinary branch pushes, and manual workflow runs do not publish.
 
-## User commands after successful publication
+## User commands
 
-After the corresponding PyPI version has been confirmed, users can run just that MCP without Git or a checkout:
+Users can run just the MCP they need without Git or a checkout:
 
 ```bash
 uvx --python 3.13 --from mcp-files-context==0.2.0 mcp-files --workspace ./workspace
