@@ -1,134 +1,87 @@
-<div align="center">
-  <img src="docs/assets/readme-icon.svg" width="128" alt="Agent MCP Registry icon showing connected protocol nodes" />
-  <h1>Agent MCP Registry</h1>
-  <p><strong>A growing catalog of MCP servers, clients, and integration patterns for agent-tool systems.</strong></p>
-  <p>Current entries are experimental samples, not a production-ready MCP distribution.</p>
+# Agent MCP Registry
 
-  [![Python 3.13+](https://img.shields.io/badge/Python-3.13%2B-3776AB?logo=python&logoColor=white)](mcp-files/pyproject.toml)
-  [![Email validation MCP](https://img.shields.io/badge/MCP-email%20validation-3776AB)](mcp-email-validator/)
-  [![TypeScript](https://img.shields.io/badge/TypeScript-Cloudflare%20Worker-3178C6?logo=typescript&logoColor=white)](mcp-hello/package.json)
-  [![Status: experimental](https://img.shields.io/badge/status-experimental-B54A32)](#project-status)
+Standalone Model Context Protocol servers for local file operations and email validation.
 
-  [What is it?](#what-is-it) · [Quick start](#quick-start) · [Current catalog](#current-catalog) · [Architecture](#architecture) · [Limitations](#limitations)
-</div>
-
-<p align="center">
-  <img src="docs/assets/readme-cover.svg" width="960" alt="Agent MCP Registry cover describing independently documented MCP implementations" />
-</p>
-
-## What is it?
-
-Agent MCP Registry is a growing collection of independently documented Model Context Protocol implementations and integration patterns. It is for developers exploring how agent-tool interfaces, servers, and clients fit together. Its most complete current path is a Python FastMCP server that confines file operations to a configured workspace.
-
-The repository also contains a standalone email-validation MCP, a TypeScript Cloudflare Worker, Gemini and LangGraph client examples, and an Azure OpenAI agent that expects an external Postgres MCP server. These samples do not form one deployable application, and their maturity varies.
-
-Entries, runtimes, and integrations may change as the registry grows. Each entry remains independently documented so its current capabilities and limitations are clear.
-
-## Catalog direction
-
-The registry grows through self-contained entries that make one integration idea easy to inspect, adapt, or replace. Future entries can cover local and hosted servers, client patterns, tool safety, evaluation helpers, and deployment approaches.
-
-Only checked-in, documented implementations are presented as available. The catalog below is the source of truth for what the repository currently contains.
-
-## Quick start
-
-The shortest self-contained path starts the Python file server. It requires [Python 3.13 or newer](mcp-files/pyproject.toml) and [\`uv\`](https://docs.astral.sh/uv/).
-
-\`\`\`bash
-git clone https://github.com/jayanth-mkv/agent-mcp-registry.git
-cd agent-mcp-registry/mcp-files
-uv sync
-uv run mcp-server --help
-uv run mcp-server
-\`\`\`
-
-The server listens on \`127.0.0.1:8000\` over SSE and confines tools to \`workspace/\` by default. Override those values when needed:
-
-\`\`\`bash
-uv run mcp-server --host 0.0.0.0 --port 9001 --workspace ./data
-\`\`\`
-
-The CLI also exposes \`http\` and \`stdio\` transports. There is no authentication layer, so do not expose the server to an untrusted network.
-
-### Email-validation MCP
-
-The independent [\`mcp-email-validator\`](mcp-email-validator/) server checks syntax and DNS mail routes without sending email. Its SMTP recipient probe is disabled by default and should only be enabled for addresses and infrastructure you are authorized to assess.
-
-\`\`\`bash
-cd mcp-email-validator
-uv sync
-uv run mcp-email-validator --transport stdio
-\`\`\`
-
-## Current catalog
-
-| Path | Status | What the code implements |
+| Server | Tools | Documentation |
 | --- | --- | --- |
-| [\`mcp-files/mcp-server\`](mcp-files/mcp-server/) | Implemented, experimental | FastMCP server with 14 file, directory, search, metadata, and workspace-stat tools. |
-| [\`mcp-email-validator\`](mcp-email-validator/) | Implemented, experimental | FastMCP server for syntax, DNS mail-route, and bounded opt-in SMTP recipient checks. |
-| [\`mcp-files/examples/clients\`](mcp-files/examples/clients/) | Experimental | Plain FastMCP, Gemini, and LangGraph client examples targeting the local SSE server. |
-| [\`mcp-hello\`](mcp-hello/) | Implemented, experimental | Cloudflare Worker methods for a greeting and current time, routed through \`workers-mcp\`. |
-| [\`mcp-postgres\`](mcp-postgres/) | Experimental, service-dependent | Azure OpenAI ReAct agent that loads tools from a separately hosted Postgres MCP endpoint. |
-| [\`mcp-files/mcp-hello\`](mcp-files/mcp-hello/) | Documentation stub | Notes for the Worker example; the TypeScript implementation itself is at the repository root. |
+| **File Server** | 14 tools to create, read, search, copy, move, and manage text files within a configured directory. | [mcp-files](mcp-files/README.md) |
+| **Email Validator** | Single and batch syntax checks, DNS mail-route lookup, and optional SMTP recipient probing. | [mcp-email-validator](mcp-email-validator/README.md) |
 
-### Python file tools
+Demo servers, AI clients, and the Postgres agent live in [experimental/](experimental/README.md).
 
-The local server implements these outcomes:
+## Install and run
 
-- Create, read, overwrite, append, copy, move, rename, and delete paths.
-- List files and directories, search a text file, and check whether a path exists.
-- Return file metadata and aggregate workspace statistics as JSON.
-- Reject paths that resolve outside the configured workspace.
+Requires **Python 3.13+** and [uv](https://docs.astral.sh/uv/getting-started/installation/). These servers are installed from this repository; no PyPI publication is assumed.
 
-\`delete_path\` recursively removes directories inside that workspace. Treat access to the server as write access to the configured directory.
+```bash
+git clone https://github.com/jayanth-mkv/agent-mcp-registry.git
+cd agent-mcp-registry
+```
 
-### Optional agent clients
+File Server:
 
-Start the file server first, then set \`GOOGLE_API_KEY\` before running either Google-backed example:
+```bash
+uv sync --project mcp-files --locked --no-dev
+uv run --project mcp-files --locked --no-dev mcp-files --workspace ./workspace
+```
 
-\`\`\`bash
-cd mcp-files
-uv run examples/clients/gemini.py
-# or
-uv run examples/clients/react_agent.py
-\`\`\`
+Email Validator:
 
-The Postgres example separately requires Azure OpenAI credentials and \`MCP_RENDER_URL\`; it does not include or start the Postgres MCP server it connects to.
+```bash
+uv sync --project mcp-email-validator --locked --no-dev
+uv run --project mcp-email-validator --locked --no-dev mcp-email-validator
+```
 
-## Architecture
+Both default to **stdio** and wait for an MCP client. For a local Streamable HTTP endpoint:
 
-<p align="center">
-  <img src="docs/assets/readme-architecture.svg" width="1000" alt="Agent MCP Registry architecture from caller through a selected runtime and MCP boundary to tool results" />
-</p>
+```bash
+uv run --project mcp-files --locked --no-dev mcp-files --transport http --workspace ./workspace
+uv run --project mcp-email-validator --locked --no-dev mcp-email-validator --transport http
+```
 
-Each catalog entry chooses a different entry point and transport, but the implemented direction is the same: a caller reaches an MCP boundary, invokes the tools supplied by that entry, and receives a runtime-specific result.
+Run HTTP servers in separate terminals. Endpoints are `http://127.0.0.1:8000/mcp` and `http://127.0.0.1:8003/mcp`.
 
-## Maturity and gaps
+## Connect an MCP client
 
-This registry is still maturing, not a versioned product. Before building on it, note these checked-in mismatches:
+For clients supporting `mcpServers` configuration, replace the example paths with absolute paths on your machine. On Windows, use forward slashes or escaped backslashes in JSON. The client must be able to find `uv` on its PATH.
 
-- \`mcp-files/examples/clients/base.py\` calls \`create_file\` with \`filename\`, while the server tool requires \`path\`.
-- The Cloudflare Worker tests still assert the starter response \`Hello World!\`; the current worker instead delegates requests through \`ProxyToSelf\`.
-- There is no root command that installs, runs, or tests every experiment.
-- Some nested documentation describes files that live elsewhere in the repository.
+```json
+{
+  "mcpServers": {
+    "files": {
+      "command": "uv",
+      "args": [
+        "--directory", "/absolute/path/agent-mcp-registry/mcp-files",
+        "run", "--locked", "--no-dev", "mcp-files",
+        "--workspace", "/absolute/path/allowed-files"
+      ]
+    },
+    "email-validator": {
+      "command": "uv",
+      "args": [
+        "--directory", "/absolute/path/agent-mcp-registry/mcp-email-validator",
+        "run", "--locked", "--no-dev", "mcp-email-validator"
+      ]
+    }
+  }
+}
+```
 
-## Limitations
+## Usage boundaries
 
-- The file server has no authentication, authorization policy, quotas, or automated tests.
-- The email-validation server is not a mailbox-ownership or deliverability guarantee; SMTP probing is opt-in, bounded, and can be affected by catch-all or anti-abuse behavior.
-- Text tools assume UTF-8 and are not designed for binary or very large files.
-- The Gemini, LangGraph, Azure OpenAI, Postgres MCP, and Cloudflare paths require external credentials or services.
-- The Postgres example has no local dependency manifest, so its environment is not reproducible from that folder alone.
-- \`mcp-files/\` and \`mcp-email-validator/\` include their own license files; the repository root does not currently state reuse terms for the full collection.
+- File tools can modify and recursively delete data in the configured workspace. Use a dedicated directory. Links and junctions are rejected; this is a local tool, not an OS sandbox against other processes modifying the filesystem.
+- Email checks do not prove mailbox ownership or guarantee delivery. SMTP probing is opt-in and never sends message data.
+- HTTP and legacy SSE modes have no authentication. Keep them on loopback unless you provide a protected deployment.
 
 ## Development
 
-The TypeScript sample declares its checks in [\`mcp-hello/package.json\`](mcp-hello/package.json):
+Each Python project has its own manifest and lockfile. Install development dependencies and run its tests:
 
-\`\`\`bash
-cd mcp-hello
-npm ci
-npm test -- --run
-\`\`\`
+```bash
+uv sync --project mcp-files --locked
+uv run --project mcp-files --locked pytest mcp-files/tests -q
+uv sync --project mcp-email-validator --locked
+uv run --project mcp-email-validator --locked pytest mcp-email-validator/tests -q
+```
 
-Update the stale Worker assertions before treating that test command as a passing verification gate. New Python tools belong in [\`tools.py\`](mcp-files/mcp-server/src/mcp_server/tools.py) and should include focused tests for path confinement and destructive operations.
+The standalone packages are version **0.2.0**. Dependency updates are resolved in their lockfiles; see [verification notes](docs/verification.md) for the tested scope and remaining external checks. Each standalone server includes its own MIT license.

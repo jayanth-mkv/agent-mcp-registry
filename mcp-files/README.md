@@ -1,168 +1,71 @@
-# MCP Files Workspace
+# File Server MCP
 
-Multi-project workspace demonstrating the Model Context Protocol (MCP) across:
+An MCP server with 14 tools for managing UTF-8 text files within a configured workspace. No API key or external service is required.
 
-1. Python file management MCP server (`mcp-server` package) exposing safe workspace file + directory tools.
-2. Example Python MCP clients (plain + LangGraph ReAct agent) in `examples/`.
-3. Cloudflare Workers based MCP server (`mcp-hello`) using `workers-mcp` (TypeScript) to expose simple greeting/time tools.
+## Install
 
----
+From this directory, with Python 3.13+ and [uv](https://docs.astral.sh/uv/getting-started/installation/):
 
-## Contents
-
-| Path                | Description                                                                        |
-| ------------------- | ---------------------------------------------------------------------------------- |
-| `pyproject.toml`    | Root Python workspace (managed by `uv`) pulling in the local `mcp-server` package. |
-| `mcp-server/`       | Python FastMCP server exposing file operations.                                    |
-| `examples/clients/` | Sample Python clients (FastMCP + LangGraph agent).                                 |
-| `mcp-hello/`        | Cloudflare Workers MCP server in TypeScript.                                       |
-| `workspace/`        | Default workspace directory the Python file server operates on.                    |
-
----
-
-## Quick Start (Python File Server)
-
-Prerequisites: Python 3.13+ and `uv` (https://github.com/astral-sh/uv).
-
-```powershell
-# From repository root
-uv sync
-
-# Run the file MCP server (defaults: 127.0.0.1:8000, SSE transport)
-uv run mcp-server
+```bash
+uv sync --locked --no-dev
+uv run --locked --no-dev mcp-files --workspace ./workspace
 ```
 
-Environment overrides (optional):
+The default transport is stdio. Configure your MCP client using the [repository example](../README.md#connect-an-mcp-client).
 
-```powershell
-$env:MCP_SERVER_HOST='0.0.0.0'
-$env:MCP_SERVER_PORT='9001'
-$env:MCP_WORKSPACE_DIR='workspace'
-uv run mcp-server
+For Streamable HTTP:
+
+```bash
+uv run --locked --no-dev mcp-files --transport http --host 127.0.0.1 --port 8000 --workspace ./workspace
 ```
 
-### List Tools Programmatically
+Endpoint: `http://127.0.0.1:8000/mcp`. Legacy SSE is available with `--transport sse` at `/sse`.
 
-```python
-from fastmcp import Client
-from fastmcp.client.transports import SSETransport
+## Tools
 
-async with Client(SSETransport(url="http://127.0.0.1:8000/sse")) as c:
-	tools = await c.list_tools()
-	print([t.name for t in tools])
+| Tool | Arguments | Behavior |
+| --- | --- | --- |
+| `create_file` | `path`, `content=""` | Create a new file; fail if it exists. |
+| `read_file` | `path` | Read UTF-8 text. |
+| `write_file` | `path`, `content` | Create or overwrite a text file. |
+| `append_file` | `path`, `content` | Append text; create the file if missing. |
+| `delete_path` | `path` | Delete a file or recursively delete a directory. |
+| `rename_path` | `src`, `dst` | Rename a file or directory. |
+| `copy_path` | `src`, `dst` | Copy a file or directory; merge existing directories. |
+| `move_path` | `src`, `dst` | Move a file or directory. |
+| `list_files` | None | List workspace files recursively. |
+| `list_dirs` | None | List workspace directories recursively. |
+| `search_file` | `path`, `term` | Return matching lines with line numbers. |
+| `file_info` | `path` | Return JSON metadata. |
+| `workspace_stats` | None | Return JSON counts, sizes, and extensions. |
+| `path_exists` | `path` | Return `file`, `dir`, or `none`. |
+
+Paths resolve inside the configured workspace. Parent directories are created when writing files. Relative workspace paths resolve from the process working directory; prefer an absolute workspace path in client configuration.
+
+## Configuration
+
+| Setting | Environment variable | Default |
+| --- | --- | --- |
+| Workspace | `MCP_WORKSPACE_DIR` | `./workspace` |
+| HTTP/SSE host | `MCP_SERVER_HOST` | `127.0.0.1` |
+| HTTP/SSE port | `MCP_SERVER_PORT` | `8000` |
+
+CLI flags override environment settings. `--workspace` is applied before the server starts. Startup diagnostics use stderr so stdout remains available for MCP messages.
+
+## Boundaries
+
+Use a dedicated workspace: callers have read and write access, including recursive deletion. The workspace root itself cannot be deleted, renamed, or moved. Symbolic links and Windows junctions are unsupported and rejected, including links inside copied directory trees. These checks do not provide isolation against concurrent filesystem changes by other processes.
+
+The server has no authentication or size quotas. Keep HTTP/SSE on loopback. Text tools read complete files into memory and are intended for small local text files.
+
+## Development
+
+```bash
+uv sync --locked
+uv run --locked pytest -q
+uv build
 ```
 
----
+The CLI is now `mcp-files`; the former nested `mcp-server` workspace has been consolidated into this package. AI clients are in [experimental/](../experimental/README.md).
 
-## Example: LangGraph ReAct Agent
-
-The example agent uses Gemini via `langchain-google-genai`.
-
-Set env variable (PowerShell shown):
-
-```powershell
-$env:GOOGLE_API_KEY = '<your key>'
-uv run examples/clients/react_agent.py
-```
-
-You can now chat and invoke file tools automatically.
-
----
-
-## Tool Summary (Python File Server)
-
-| Tool              | Purpose                                  | Key Params     |
-| ----------------- | ---------------------------------------- | -------------- | ----- | ---- |
-| `create_file`     | Create text file (parents auto-created). | path, content? |
-| `read_file`       | Read file contents.                      | path           |
-| `write_file`      | Overwrite / create file.                 | path, content  |
-| `append_file`     | Append to file.                          | path, content  |
-| `delete_path`     | Delete file or directory recursively.    | path           |
-| `rename_path`     | Rename / move (non-recursive).           | src, dst       |
-| `copy_path`       | Copy file or directory.                  | src, dst       |
-| `move_path`       | Move file or directory.                  | src, dst       |
-| `list_files`      | List all files (relative).               | —              |
-| `list_dirs`       | List all directories.                    | —              |
-| `search_file`     | Grep-like line match.                    | path, term     |
-| `file_info`       | JSON metadata.                           | path           |
-| `workspace_stats` | Aggregate JSON stats.                    | —              |
-| `path_exists`     | Return file                              | dir            | none. | path |
-
----
-
-## Cloudflare Workers MCP (`mcp-hello`)
-
-Independent TypeScript MCP Worker exposing:
-
-- `sayHello(name)` → friendly greeting.
-- `getCurrentTime(message?)` → ISO timestamp with optional message.
-
-Quick start:
-
-```powershell
-cd mcp-hello
-pnpm install   # or npm install / yarn
-pnpm dev       # starts wrangler dev
-```
-
-Run tests:
-
-```powershell
-pnpm test
-```
-
-Deploy (requires configured Cloudflare account + API token):
-
-```powershell
-pnpm deploy
-```
-
-The `workers-mcp docgen` step in the deploy script can emit MCP metadata for IDE / client integration.
-
----
-
-## Development Notes
-
-- Python dependency management: `uv sync` regenerates `.venv` (no `pip install` needed).
-- Add new tools in `mcp-server/src/mcp_server/tools.py` using `@mcp.tool` decorator.
-- The root project depends on local `mcp-server` via `[tool.uv.sources]`.
-- Adjust workspace root for file operations using `--workspace` CLI arg or `MCP_WORKSPACE_DIR`.
-
----
-
-## Roadmap / Ideas
-
-- Add auth / capability filtering per tool.
-- Streaming responses for large file reads (chunked).
-- Syntax-aware search / indexing.
-- Tests for tool edge cases.
-
----
-
-## License
-
-MIT (add full text in a LICENSE file if distributing publicly).
-
----
-
-## Contributing
-
-1. Fork & branch.
-2. Make changes with clear commits.
-3. Include or update examples if adding tools.
-4. Open PR describing motivation + behavior.
-
----
-
-## Troubleshooting
-
-| Issue                | Tip                                                                |
-| -------------------- | ------------------------------------------------------------------ |
-| Server not reachable | Confirm port (default 8000) and transport `sse`.                   |
-| Tools list empty     | Server may not have finished starting; retry after a moment.       |
-| File ops denied      | Ensure path resolves inside configured workspace (security guard). |
-| Gemini auth error    | Verify `GOOGLE_API_KEY` environment variable.                      |
-
----
-
-Happy hacking with MCP! 🚀
+Version 0.2.0. Licensed under the [MIT License](LICENSE).

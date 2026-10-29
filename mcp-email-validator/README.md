@@ -1,58 +1,62 @@
 # Email Validator MCP
 
-A standalone [FastMCP](https://gofastmcp.com/) server for checking an email address without sending a message. It performs a pragmatic syntax check and DNS mail-routing lookup by default. SMTP recipient probing is deliberately opt-in because it opens a network connection to the recipient infrastructure and is only a delivery signal, not proof that a mailbox belongs to someone.
+An MCP server for checking email syntax and DNS mail routes without sending a message. Optional SMTP probing provides a recipient acceptance signal; it does not prove ownership or guarantee delivery.
+
+## Install
+
+From this directory, with Python 3.13+ and [uv](https://docs.astral.sh/uv/getting-started/installation/):
+
+```bash
+uv sync --locked --no-dev
+uv run --locked --no-dev mcp-email-validator
+```
+
+The default transport is stdio. Configure your MCP client using the [repository example](../README.md#connect-an-mcp-client). No API key is required; DNS checks need network access.
+
+For Streamable HTTP:
+
+```bash
+uv run --locked --no-dev mcp-email-validator --transport http --host 127.0.0.1 --port 8003
+```
+
+Endpoint: `http://127.0.0.1:8003/mcp`. Legacy SSE is available with `--transport sse` at `/sse`. HTTP and SSE have no authentication; keep them on loopback unless protected separately.
 
 ## Tools
 
-| Tool | Default behavior | Optional behavior |
+| Tool | Required argument | Optional arguments |
 | --- | --- | --- |
-| `validate_email` | Syntax and MX/A/AAAA mail-route lookup for one address. | With `check_smtp=true`, tries `EHLO`, `MAIL FROM`, and `RCPT TO` against up to three public mail hosts. It never sends `DATA`. |
-| `validate_email_batch` | Runs the same local and DNS checks for up to 50 addresses. | SMTP probing remains opt-in and is rate-bounded by the same host and timeout limits for each address. |
+| `validate_email` | `address: string` | `check_smtp=false`, `timeout_seconds=10` |
+| `validate_email_batch` | `addresses: string[]` (up to 50) | `check_smtp=false`, `timeout_seconds=10` |
 
-The returned `smtp_status` is `not_requested`, `accepted`, `rejected`, `unavailable`, or `error`. An `accepted` response means only that the remote server accepted the SMTP command; catch-all domains, greylisting, and provider anti-abuse rules can make it inaccurate.
+Both tools check conventional unquoted mailbox syntax and normalize the domain, then look up MX records. Domains without MX records may use A/AAAA fallback; a null MX means the domain does not accept mail. Invalid syntax skips DNS and SMTP.
 
-## Run locally
-
-Requirements: Python 3.13+ and [uv](https://docs.astral.sh/uv/).
-
-```bash
-git clone https://github.com/jayanth-mkv/agent-mcp-registry.git
-cd agent-mcp-registry/mcp-email-validator
-uv sync
-uv run mcp-email-validator --transport stdio
-```
-
-For a local HTTP or SSE endpoint, bind to loopback unless a protected deployment is intentional:
-
-```bash
-uv run mcp-email-validator --transport http --host 127.0.0.1 --port 8003
-```
-
-## Example result
+Example tool arguments:
 
 ```json
-{
-  "address": "hello@example.com",
-  "normalized_address": "hello@example.com",
-  "syntax_valid": true,
-  "domain": "example.com",
-  "mail_route_status": "found",
-  "mail_hosts": ["mail.example.com"],
-  "smtp_status": "not_requested",
-  "notes": ["SMTP probing was not requested."]
-}
+{ "address": "user@example.com", "check_smtp": false }
 ```
 
-## Safety boundaries
+Results contain `normalized_address`, `syntax_valid`, `mail_route_status`, `mail_hosts`, `smtp_status`, and explanatory `notes`.
 
-- SMTP is disabled unless the caller explicitly passes `check_smtp=true`.
-- Syntax-invalid addresses do not trigger DNS or SMTP traffic.
-- SMTP checks are limited to three mail hosts, one publicly routable IP per host, and a timeout clamped to 1–15 seconds.
-- The server does not authenticate, send a message, retain addresses, or verify ownership of a mailbox.
-- Use recipient probing only for addresses and infrastructure you are authorized to assess. Do not expose the HTTP or SSE transport directly to untrusted callers.
+| Field | Possible values |
+| --- | --- |
+| `mail_route_status` | `not_checked`, `found`, `fallback`, `not_found`, `lookup_error` |
+| `smtp_status` | `not_requested`, `accepted`, `rejected`, `unavailable`, `error` |
 
-## Scope
+## SMTP boundaries
 
-The syntax check intentionally supports conventional unquoted mailbox addresses. It is not a full implementation of every RFC mailbox form. DNS and SMTP results can change between calls, and a successful result should not be treated as consent or a guarantee of deliverability.
+SMTP probing is disabled unless `check_smtp=true`. It tries at most three mail hosts, connects to one public IP per host on port 25, and uses SMTP greeting, sender, and recipient commands. It never sends `DATA` or authenticates. DNS lookups and socket operations use a timeout clamped to 1–15 seconds; this is not a total request deadline, and batches run sequentially.
 
-This subproject is licensed under the [MIT License](LICENSE).
+Use probing only for infrastructure and addresses you are authorized to assess. Catch-all domains, greylisting, sender policy, and anti-abuse controls can produce misleading results. Private and loopback IP addresses are not contacted. Address data is not written to an application database; DNS queries and optional SMTP probes are visible to the contacted infrastructure.
+
+## Development
+
+```bash
+uv sync --locked
+uv run --locked pytest -q
+uv build
+```
+
+Tests mock DNS/SMTP network operations and exercise the installed stdio server. Live recipient acceptance and delivery are separate checks.
+
+Version 0.2.0. Licensed under the [MIT License](LICENSE).
