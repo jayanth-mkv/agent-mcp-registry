@@ -1,0 +1,202 @@
+name: Canvas LMS MCP
+
+on:
+  push:
+    branches: [main]
+    tags: ["mcp-canvas-lms-v*"]
+    paths:
+      - "mcp-canvas-lms/**"
+      - ".github/scripts/*canvas*"
+      - ".github/workflows/canvas.yml"
+  pull_request:
+    paths:
+      - "mcp-canvas-lms/**"
+      - ".github/scripts/*canvas*"
+      - ".github/workflows/canvas.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: canvas-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+
+env:
+  RUSTUP_TOOLCHAIN: "1.95.0"
+  CARGO_TERM_COLOR: always
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.target.outputs.version }}
+      publish: ${{ steps.target.outputs.publish }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: "0.13.6"
+          python-version: "3.13"
+          enable-cache: false
+      - id: target
+        env:
+          RELEASE_EVENT: ${{ github.event_name }}
+          RELEASE_REF: ${{ github.ref }}
+        run: uv run --no-project python .github/scripts/canvas_release.py validate --event "$RELEASE_EVENT" --ref "$RELEASE_REF"
+      - name: Require tagged source to be on main
+        if: steps.target.outputs.publish == 'true'
+        run: git merge-base --is-ancestor HEAD origin/main
+      - name: Check publication guards
+        run: uv run --no-project python -m unittest discover -s mcp-canvas-lms/tests -v
+
+  minimum-rust:
+    name: Rust 1.89 compatibility
+    runs-on: ubuntu-22.04
+    env:
+      RUSTUP_TOOLCHAIN: "1.89.0"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: rustup toolchain install "$RUSTUP_TOOLCHAIN" --profile minimal --no-self-update
+      - run: cargo check --manifest-path mcp-canvas-lms/Cargo.toml --locked
+
+  build:
+    name: ${{ matrix.target }}
+    needs: prepare
+    runs-on: ${{ matrix.os }}
+    env:
+      CARGO_TARGET_DIR: target
+      RUSTFLAGS: ${{ matrix.rustflags }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+            suffix: ""
+            rustflags: ""
+          - os: ubuntu-22.04-arm
+            target: aarch64-unknown-linux-gnu
+            suffix: ""
+            rustflags: ""
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            suffix: .exe
+            rustflags: "-C target-feature=+crt-static"
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            suffix: ""
+            rustflags: ""
+          - os: macos-15-intel
+            target: x86_64-apple-darwin
+            suffix: ""
+            rustflags: ""
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: "0.13.6"
+          python-version: "3.13"
+          enable-cache: false
+      - name: Install the tested Rust toolchain
+        run: rustup toolchain install "$RUSTUP_TOOLCHAIN" --profile minimal --component clippy --component rustfmt --no-self-update
+      - run: cargo fmt --manifest-path mcp-canvas-lms/Cargo.toml -- --check
+      - run: cargo clippy --manifest-path mcp-canvas-lms/Cargo.toml --all-targets --locked --target "${{ matrix.target }}" -- -D warnings
+      - run: cargo test --manifest-path mcp-canvas-lms/Cargo.toml --locked --target "${{ matrix.target }}"
+      - run: cargo build --manifest-path mcp-canvas-lms/Cargo.toml --release --locked --target "${{ matrix.target }}"
+      - name: Test independent MCP sessions and measure the binary
+        run: |
+          mkdir -p dist
+          uv run --no-project python .github/scripts/test_canvas_mcp.py --binary "$CARGO_TARGET_DIR/${{ matrix.target }}/release/mcp-canvas-lms${{ matrix.suffix }}" > "dist/${{ matrix.target }}-metrics.json"
+          cat "dist/${{ matrix.target }}-metrics.json"
+      - name: Package the native binary
+        run: >-
+          uv run --no-project python .github/scripts/canvas_release.py package
+          --binary "$CARGO_TARGET_DIR/${{ matrix.target }}/release/mcp-canvas-lms${{ matrix.suffix }}"
+          --target "${{ matrix.target }}" --out dist
+      - name: Verify the distributable crate
+        if: matrix.target == 'x86_64-unknown-linux-gnu'
+        run: cargo package --manifest-path mcp-canvas-lms/Cargo.toml --locked
+      - name: Retain the verified crate
+        if: matrix.target == 'x86_64-unknown-linux-gnu'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: canvas-crate
+          path: target/package/mcp-canvas-lms-${{ needs.prepare.outputs.version }}.crate
+          if-no-files-found: error
+          retention-days: 7
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: canvas-${{ matrix.target }}
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 7
+
+  publish-crate:
+    name: Publish crate
+    needs: [prepare, minimum-rust, build]
+    if: needs.prepare.outputs.publish == 'true'
+    runs-on: ubuntu-22.04
+    environment: crates-io
+    env:
+      CARGO_TARGET_DIR: target
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          version: "0.13.6"
+          python-version: "3.13"
+          enable-cache: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: canvas-crate
+          path: tested-crate/
+      - run: rustup toolchain install "$RUSTUP_TOOLCHAIN" --profile minimal --no-self-update
+      - name: Reproduce and compare the already verified crate
+        run: |
+          cargo package --manifest-path mcp-canvas-lms/Cargo.toml --locked --no-verify
+          uv run --no-project python .github/scripts/canvas_release.py compare --tested "tested-crate/mcp-canvas-lms-${{ needs.prepare.outputs.version }}.crate" --candidate "$CARGO_TARGET_DIR/package/mcp-canvas-lms-${{ needs.prepare.outputs.version }}.crate"
+      - name: Publish only the verified source
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: |
+          test -n "$CARGO_REGISTRY_TOKEN" || { echo "CARGO_REGISTRY_TOKEN is not configured" >&2; exit 1; }
+          cargo publish --manifest-path mcp-canvas-lms/Cargo.toml --locked --no-verify
+
+  github-release:
+    name: Publish native downloads
+    needs: [prepare, minimum-rust, build, publish-crate]
+    if: needs.prepare.outputs.publish == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: canvas-*
+          path: release-assets/
+          merge-multiple: true
+      - name: Publish checksummed platform binaries
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_VERSION: ${{ needs.prepare.outputs.version }}
+        run: >-
+          gh release create "$GITHUB_REF_NAME" release-assets/* --verify-tag
+          --title "Canvas LMS MCP v$RELEASE_VERSION"
+          --notes-file mcp-canvas-lms/RELEASE_NOTES.md

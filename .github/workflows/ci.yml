@@ -6,12 +6,20 @@ on:
     paths:
       - "mcp-files/**"
       - "mcp-email-validator/**"
-      - ".github/**"
+      - ".github/actions/verify-package/**"
+      - ".github/scripts/release.py"
+      - ".github/tests/**"
+      - ".github/workflows/ci.yml"
+      - ".github/workflows/publish.yml"
   pull_request:
     paths:
       - "mcp-files/**"
       - "mcp-email-validator/**"
-      - ".github/**"
+      - ".github/actions/verify-package/**"
+      - ".github/scripts/release.py"
+      - ".github/tests/**"
+      - ".github/workflows/ci.yml"
+      - ".github/workflows/publish.yml"
   workflow_dispatch:
 
 permissions:

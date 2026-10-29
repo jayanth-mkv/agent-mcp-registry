@@ -1,6 +1,6 @@
 # Independent PyPI releases
 
-Each standalone MCP is a separate Python distribution. Publishing is performed by [publish.yml](../.github/workflows/publish.yml) through GitHub Actions and PyPI Trusted Publishing. No PyPI token is stored in GitHub or used locally.
+Each Python MCP is a separate distribution. Publishing is performed by [publish.yml](../.github/workflows/publish.yml) through GitHub Actions and PyPI Trusted Publishing. No PyPI token is stored in GitHub or used locally. The Rust Canvas MCP has its own [release workflow](../.github/workflows/canvas.yml).
 
 ## Published packages
 
