@@ -20,6 +20,7 @@ DISTRIBUTIONS = {
     "mcp-files": "agent-mcp-registry-files",
     "mcp-email-validator": "mcp-email-validator",
 }
+ENVIRONMENTS = {"mcp-files": "pypi-files", "mcp-email-validator": "pypi"}
 ROOT = Path(__file__).resolve().parents[2]
 VERSION_PATTERN = r"(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:(?:a|b|rc)\d+)?"
 
@@ -52,7 +53,10 @@ def select(event: str, ref: str, requested: str = "", root: Path = ROOT) -> dict
         publish = "false"
     else:
         raise ValueError("Unsupported release event")
-    return {"package": package, "distribution": DISTRIBUTIONS[package], "version": version, "publish": publish}
+    return {
+        "package": package, "distribution": DISTRIBUTIONS[package],
+        "environment": ENVIRONMENTS[package], "version": version, "publish": publish,
+    }
 
 
 def validate_metadata(content: bytes, expected: dict) -> None:

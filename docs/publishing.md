@@ -16,11 +16,13 @@ Sign in to your PyPI account and open [account publishing settings](https://pypi
 | Owner | `jayanth-mkv` | `jayanth-mkv` |
 | Repository name | `agent-mcp-registry` | `agent-mcp-registry` |
 | Workflow filename | `publish.yml` | `publish.yml` |
-| Environment name | `pypi` | `pypi` |
+| Environment name | `pypi-files` | `pypi` |
 
 The workflow filename has no directory prefix. The environment name must match exactly. PyPI creates each project on its first successful trusted publication; a pending publisher does not reserve a name. See [PyPI's setup instructions](https://docs.pypi.org/trusted-publishers/creating-a-project-through-oidc/).
 
-The GitHub repository's `pypi` environment is configured with custom tag restrictions for `mcp-files-v*` and `mcp-email-validator-v*`. Only the publishing job receives `id-token: write`. Build and test jobs have read-only repository access and no publishing identity. No mandatory human approval has been added to the environment.
+The two pending publishers must have distinct configurations so PyPI can identify which project to create. Keep the same repository and workflow, and use the different environment names above. See [PyPI's explanation of multiple projects per repository](https://docs.pypi.org/trusted-publishers/internals/).
+
+The GitHub repository's `pypi-files` environment permits only `mcp-files-v*` tags; `pypi` permits only `mcp-email-validator-v*` tags. Only the publishing job receives `id-token: write`. Build and test jobs have read-only repository access and no publishing identity. No mandatory human approval has been added to either environment.
 
 ## Validate without publishing
 

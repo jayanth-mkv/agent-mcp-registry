@@ -29,6 +29,7 @@ jobs:
     outputs:
       package: ${{ steps.target.outputs.package }}
       distribution: ${{ steps.target.outputs.distribution }}
+      environment: ${{ steps.target.outputs.environment }}
       version: ${{ steps.target.outputs.version }}
       publish: ${{ steps.target.outputs.publish }}
     steps:
@@ -88,7 +89,7 @@ jobs:
     permissions:
       id-token: write
     environment:
-      name: pypi
+      name: ${{ needs.prepare.outputs.environment }}
       url: https://pypi.org/project/${{ needs.prepare.outputs.distribution }}/${{ needs.prepare.outputs.version }}/
     concurrency:
       group: pypi-${{ needs.prepare.outputs.package }}

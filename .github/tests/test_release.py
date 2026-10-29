@@ -29,7 +29,17 @@ class ReleaseTests(unittest.TestCase):
         for package in release.PACKAGES:
             with self.subTest(package=package):
                 target = release.select("push", f"refs/tags/{package}-v0.2.0", root=self.root)
-                self.assertEqual(target, {"package": package, "distribution": release.DISTRIBUTIONS[package], "version": "0.2.0", "publish": "true"})
+                self.assertEqual(target, {
+                    "package": package, "distribution": release.DISTRIBUTIONS[package],
+                    "environment": release.ENVIRONMENTS[package], "version": "0.2.0", "publish": "true",
+                })
+
+    def test_pending_publishers_have_distinct_environments(self):
+        files = release.select("push", "refs/tags/mcp-files-v0.2.0", root=self.root)
+        email = release.select("push", "refs/tags/mcp-email-validator-v0.2.0", root=self.root)
+        self.assertEqual(files["environment"], "pypi-files")
+        self.assertEqual(email["environment"], "pypi")
+        self.assertNotEqual(files["environment"], email["environment"])
 
     def test_wrong_tag_version_is_rejected(self):
         with self.assertRaisesRegex(ValueError, "does not match"):
