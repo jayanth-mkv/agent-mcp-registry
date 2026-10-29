@@ -64,7 +64,7 @@ impl ServerHandler for CanvasServer {
         request: CallToolRequestParams,
         _: RequestContext<RoleServer>,
     ) -> Result<CallToolResponse, ErrorData> {
-        let _queued = match self.pending.clone().try_acquire_owned() {
+        let queued = match self.pending.clone().try_acquire_owned() {
             Ok(permit) => permit,
             Err(_) => return Ok(CallToolResult::error(vec![ContentBlock::text("Canvas request queue is full; no request was sent. Retry after active requests complete.")]).into()),
         };
@@ -80,12 +80,13 @@ impl ServerHandler for CanvasServer {
         let client = self.client.clone();
         let result = tokio::task::spawn_blocking(move || {
             let _permit = permit;
+            let _queued = queued;
             client.execute(plan)
         })
         .await
         .map_err(|_| ErrorData::internal_error("Canvas request worker failed", None))?;
         let result = match result {
-            Ok(value) => CallToolResult::success(vec![ContentBlock::text(value.to_string())]),
+            Ok(value) => CallToolResult::success(vec![ContentBlock::text(value)]),
             Err(message) => CallToolResult::error(vec![ContentBlock::text(message)]),
         };
         Ok(result.into())

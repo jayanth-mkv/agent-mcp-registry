@@ -187,6 +187,7 @@ fn authorization_is_a_header_and_results_are_compact() {
         .client
         .execute(tools::plan("canvas_list_courses", json!({}), false).unwrap())
         .unwrap();
+    let result: Value = serde_json::from_str(&result).unwrap();
     assert_eq!(
         result,
         json!({"data":[{"id":7,"name":"Course"}],"next_cursor":null})
@@ -346,6 +347,7 @@ fn large_responses_are_bounded_and_full_output_is_optional() {
         .client
         .execute(tools::plan("canvas_list_courses", json!({}), false).unwrap())
         .unwrap();
+    let compact: Value = serde_json::from_str(&compact).unwrap();
     assert_eq!(compact["data"], json!([{"id":1}]));
     assert!(
         fixture
@@ -385,6 +387,7 @@ fn unicode_content_windows_can_be_continued_without_corruption() {
             .unwrap(),
         )
         .unwrap();
+    let first: Value = serde_json::from_str(&first).unwrap();
     assert_eq!(first["data"]["body"], "🙂漢");
     assert_eq!(first["data"]["_mcp_text_windows"]["body"]["next_offset"], 2);
     let second = fixture
@@ -398,6 +401,7 @@ fn unicode_content_windows_can_be_continued_without_corruption() {
             .unwrap(),
         )
         .unwrap();
+    let second: Value = serde_json::from_str(&second).unwrap();
     assert_eq!(second["data"]["body"], "abc");
     assert!(second["data"]["_mcp_text_windows"]["body"]["next_offset"].is_null());
 }

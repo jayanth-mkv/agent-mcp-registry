@@ -3,7 +3,12 @@ use crate::{
     tools::Plan,
 };
 use serde_json::{Value, json};
-use std::{io::Read, sync::Arc, thread, time::Duration};
+use std::{
+    io::{Read, Write},
+    sync::Arc,
+    thread,
+    time::Duration,
+};
 use ureq::{
     Agent,
     tls::{RootCerts, TlsConfig, TlsProvider},
@@ -107,7 +112,7 @@ impl Canvas {
         Ok(url)
     }
 
-    pub fn execute(&self, plan: Plan) -> Result<Value, String> {
+    pub fn execute(&self, plan: Plan) -> Result<String, String> {
         if plan.method != "GET" && !self.config.writes {
             return Err("Write mode is disabled".into());
         }
@@ -203,6 +208,7 @@ impl Canvas {
                 return Err("Canvas response exceeds the 2 MiB body limit; reduce per_page".into());
             }
             let data:Value = serde_json::from_slice(&bytes).map_err(|_| "Canvas returned invalid JSON; check that the URL points to a Canvas API instance")?;
+            drop(bytes);
             if plan.list && !data.is_array() {
                 return Err("Canvas list endpoint returned an unexpected response shape".into());
             }
@@ -213,18 +219,39 @@ impl Canvas {
             };
             window_text(&mut data, plan.text_offset, plan.text_limit);
             let result = json!({"data":data,"next_cursor":next});
-            if serde_json::to_vec(&result)
-                .map_err(|_| "Cannot encode Canvas response")?
-                .len()
-                > MAX_OUTPUT
-            {
-                return Err(
-                    "Result exceeds the 256 KiB output limit; reduce per_page or omit full".into(),
-                );
-            }
-            return Ok(result);
+            let mut output = OutputBuffer(Vec::with_capacity(4096));
+            serde_json::to_writer(&mut output, &result).map_err(
+                |_| "Result exceeds the 256 KiB output limit; reduce per_page or omit full",
+            )?;
+            return String::from_utf8(output.0).map_err(|_| "Cannot encode Canvas response".into());
         }
         Err("Canvas request failed".into())
+    }
+}
+
+struct OutputBuffer(Vec<u8>);
+
+impl Write for OutputBuffer {
+    fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
+        let needed = self.0.len().saturating_add(bytes.len());
+        if needed > MAX_OUTPUT {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidData,
+                "output limit",
+            ));
+        }
+        if needed > self.0.capacity() {
+            let capacity = needed
+                .max(self.0.capacity().saturating_mul(2))
+                .min(MAX_OUTPUT);
+            self.0.reserve_exact(capacity - self.0.len());
+        }
+        self.0.extend_from_slice(bytes);
+        Ok(bytes.len())
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        Ok(())
     }
 }
 
