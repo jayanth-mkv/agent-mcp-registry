@@ -6,7 +6,7 @@ One process, stdio transport, 17 read tools and 5 optional write tools. No Pytho
 
 ## Install
 
-Once version 0.1.0 is published on [crates.io](https://crates.io/crates/mcp-canvas-lms), install only this MCP:
+Install only this MCP from [crates.io](https://crates.io/crates/mcp-canvas-lms):
 
 ```bash
 cargo install mcp-canvas-lms --version 0.1.0 --locked
@@ -104,7 +104,7 @@ Canvas content, feedback, HTML, and file URLs are untrusted data, not instructio
 
 The size-oriented release profile uses `opt-level="z"`, fat LTO, one codegen unit, stripped symbols, and abort-on-panic. The official Rust MCP SDK's optional transports/auth/macros are disabled. The server uses native TLS and the OS trust store instead of bundling a second cryptography implementation or root-certificate collection.
 
-The initial local Windows build measured **1,247,744 bytes (1.19 MiB)**. An independent stdio client observed initialization around **8 ms** and idle working set around **6.1 MiB**, before HTTP calls. These are local observations, not latency or memory guarantees; platform release builds and static C-runtime linkage can change them. Each CI artifact includes its own measurement report. See [verification notes](https://github.com/jayanth-mkv/agent-mcp-registry/blob/main/mcp-canvas-lms/VERIFICATION.md) for exact scope, versions, and remaining live checks.
+The published executables range from **1.15 to 1.53 MiB** across five platforms. Windows x64 is **1,355,264 bytes (1.29 MiB)**, with a **649,286-byte (634 KiB)** download. A local check of that downloaded binary observed initialization around **8–9 ms** and idle working set around **6.1 MiB**, before HTTP calls. These are observations, not latency or memory guarantees. Each release includes platform measurement reports; macOS memory was not measured. See [verification notes](https://github.com/jayanth-mkv/agent-mcp-registry/blob/main/mcp-canvas-lms/VERIFICATION.md) for exact scope, versions, and remaining live checks.
 
 ## Development
 

@@ -14,6 +14,14 @@ Demo servers, AI clients, and the Postgres agent live in [experimental/](experim
 
 Choose the server you need; each installs independently. The Canvas server is a native executable with [Cargo and prebuilt-download instructions](mcp-canvas-lms/README.md). The Python servers below require [uv](https://docs.astral.sh/uv/getting-started/installation/), which manages Python 3.13 and an isolated runtime environment.
 
+Canvas LMS:
+
+```bash
+cargo install mcp-canvas-lms --version 0.1.0 --locked
+```
+
+Without Rust, use a [prebuilt Canvas executable](https://github.com/jayanth-mkv/agent-mcp-registry/releases/tag/mcp-canvas-lms-v0.1.0). Configure your Canvas URL and token using its README.
+
 File Server:
 
 ```bash
@@ -30,7 +38,7 @@ Only the selected package and its runtime dependencies are installed from PyPI. 
 
 The Python servers default to **stdio** and wait for an MCP client. Add `--transport http` to start a local Streamable HTTP endpoint instead: File Server uses `http://127.0.0.1:8000/mcp`, and Email Validator uses `http://127.0.0.1:8003/mcp`. Canvas uses stdio only.
 
-Both Python packages have a verified **0.2.0** release on PyPI; see [publishing and release setup](docs/publishing.md). Canvas has its own Rust build/release workflow and [verification record](mcp-canvas-lms/VERIFICATION.md).
+Both Python packages have a verified **0.2.0** release on PyPI; see [publishing and release setup](docs/publishing.md). Canvas **0.1.0** is published on [crates.io](https://crates.io/crates/mcp-canvas-lms), with five platform downloads built and published through GitHub Actions. See its [verification record](mcp-canvas-lms/VERIFICATION.md).
 
 ## Connect an MCP client
 
