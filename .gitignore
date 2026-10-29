@@ -6,6 +6,8 @@ __pycache__/
 
 # Virtual environments
 .env
+.env.*
+!.env.example
 .venv
 env/
 venv/
@@ -20,3 +22,13 @@ node_modules/
 # OS / misc
 .DS_Store
 Thumbs.db
+
+# Build and verification output
+dist/
+build/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.wrangler/
+coverage/
+workspace/

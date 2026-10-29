@@ -15,4 +15,4 @@ def run(
     if transport in {"sse", "http"}:
         mcp.run(transport=transport, host=host, port=port)
     else:
-        mcp.run()
+        mcp.run(transport=transport)

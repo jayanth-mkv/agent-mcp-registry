@@ -2,4 +2,4 @@
 
 from fastmcp import FastMCP
 
-mcp = FastMCP(name="Email Validator")
+mcp = FastMCP(name="Email Validator", version="0.2.0")

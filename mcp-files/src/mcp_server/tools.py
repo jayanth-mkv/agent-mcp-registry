@@ -1,20 +1,21 @@
 import json
 import shutil
 import time
-from .helpers import _resolve, _iter_files, _ok, _err
+from .helpers import _resolve, _iter_files, _iter_paths, _check_tree, _ok, _err
 from .mcp import mcp
-from .config import BASE
+from .config import get_workspace
 
 # ----------------------------- file + dir ops --------------------------- #
 
 
 @mcp.tool
 def create_file(path: str, content: str = "") -> str:
-    """Create a file (parents auto-created)."""
+    """Create a new text file without overwriting an existing file."""
     try:
         p = _resolve(path)
         p.parent.mkdir(parents=True, exist_ok=True)
-        p.write_text(content, encoding="utf-8")
+        with p.open("x", encoding="utf-8") as f:
+            f.write(content)
         return _ok(f"created: {path}")
     except Exception as e:  # pragma: no cover
         return _err(e)
@@ -60,7 +61,8 @@ def append_file(path: str, content: str) -> str:
 def delete_path(path: str) -> str:
     """Delete file or directory (recursive)."""
     try:
-        p = _resolve(path)
+        p = _resolve(path, protect_root=True)
+        _check_tree(p)
         if p.is_dir():
             shutil.rmtree(p)
         elif p.exists():
@@ -74,11 +76,12 @@ def delete_path(path: str) -> str:
 
 @mcp.tool
 def rename_path(src: str, dst: str) -> str:
-    """Rename / move (non-recursive safety wrapper)."""
+    """Rename a file or directory inside the workspace."""
     try:
-        s = _resolve(src)
-        d = _resolve(dst)
-        s.parent.mkdir(parents=True, exist_ok=True)
+        s = _resolve(src, protect_root=True)
+        d = _resolve(dst, protect_root=True)
+        _check_tree(s)
+        _check_tree(d)
         d.parent.mkdir(parents=True, exist_ok=True)
         s.rename(d)
         return _ok(f"renamed: {src} -> {dst}")
@@ -93,9 +96,13 @@ def copy_path(src: str, dst: str) -> str:
     """Copy file or directory."""
     try:
         s = _resolve(src)
-        d = _resolve(dst)
+        d = _resolve(dst, protect_root=True)
         if not s.exists():
             return f"Not found: {src}"
+        if s == d or s in d.parents:
+            raise ValueError("Cannot copy a path into itself")
+        _check_tree(s)
+        _check_tree(d)
         if s.is_dir():
             shutil.copytree(s, d, dirs_exist_ok=True)
         else:
@@ -110,10 +117,14 @@ def copy_path(src: str, dst: str) -> str:
 def move_path(src: str, dst: str) -> str:
     """Move file or directory."""
     try:
-        s = _resolve(src)
-        d = _resolve(dst)
+        s = _resolve(src, protect_root=True)
+        d = _resolve(dst, protect_root=True)
         if not s.exists():
             return f"Not found: {src}"
+        if s == d or s in d.parents:
+            raise ValueError("Cannot move a path into itself")
+        _check_tree(s)
+        _check_tree(d)
         d.parent.mkdir(parents=True, exist_ok=True)
         shutil.move(str(s), str(d))
         return _ok(f"moved: {src} -> {dst}")
@@ -125,7 +136,7 @@ def move_path(src: str, dst: str) -> str:
 def list_files() -> str:
     """List all files (relative)."""
     try:
-        files = [str(p.relative_to(BASE)) for p in _iter_files()]
+        files = sorted(str(p.relative_to(get_workspace())) for p in _iter_files())
         return "\n".join(files) if files else "(none)"
     except Exception as e:  # pragma: no cover
         return _err(e)
@@ -135,7 +146,7 @@ def list_files() -> str:
 def list_dirs() -> str:
     """List all directories (relative)."""
     try:
-        dirs = [str(p.relative_to(BASE)) for p in BASE.rglob("*") if p.is_dir()]
+        dirs = sorted(str(p.relative_to(get_workspace())) for p in _iter_paths() if p.is_dir())
         return "\n".join(dirs) if dirs else "(none)"
     except Exception as e:  # pragma: no cover
         return _err(e)
@@ -191,7 +202,7 @@ def workspace_stats() -> str:
         dirs = 0
         size = 0
         exts: dict[str, int] = {}
-        for p in BASE.rglob("*"):
+        for p in _iter_paths():
             if p.is_dir():
                 dirs += 1
             elif p.is_file():
@@ -203,7 +214,7 @@ def workspace_stats() -> str:
                 ext = p.suffix.lower() or "<none>"
                 exts[ext] = exts.get(ext, 0) + 1
         data = {
-            "workspace": str(BASE),
+            "workspace": str(get_workspace()),
             "files": files,
             "directories": dirs,
             "bytes": size,

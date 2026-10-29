@@ -1,23 +1,22 @@
 [project]
 name = "mcp-files"
-version = "0.1.0"
-description = "mcp for files"
+version = "0.2.0"
+description = "MCP tools for text files inside a configured local workspace"
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = [
-    "mcp-server",
-    "google-genai>=1.36.0",
-    "langchain>=0.3.27",
-    "langchain-google-genai>=2.1.10",
-    "langchain-mcp-adapters>=0.1.9",
-    "langgraph>=0.6.7",
-]
+license = "MIT"
+license-files = ["LICENSE"]
+dependencies = ["fastmcp>=4.1.4,<5"]
+
+[project.scripts]
+mcp-files = "mcp_server.cli:main"
 
 [dependency-groups]
-dev = ["python-dotenv>=1.1.1"]
+dev = ["pytest>=9.2.0,<10"]
 
-[tool.uv.workspace]
-members = ["mcp-server"]
+[build-system]
+requires = ["uv_build>=0.13.6,<0.14"]
+build-backend = "uv_build"
 
-[tool.uv.sources]
-mcp-server = { workspace = true }
+[tool.uv.build-backend]
+module-name = "mcp_server"

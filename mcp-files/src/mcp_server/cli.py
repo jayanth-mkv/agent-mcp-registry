@@ -1,18 +1,17 @@
 """Command line interface for the mcp-server package.
 
 Usage examples:
-  uv run mcp-server --host 0.0.0.0 --port 9000
+  uv run mcp-files --transport http --port 9000
   python -m mcp_server.cli --transport sse
 """
 
 from __future__ import annotations
 
 import argparse
-import os
 from typing import Optional
 
-from . import run as run_programmatic, mcp  # re-exported for potential dynamic use
-from .config import DEFAULT_HOST, DEFAULT_PORT, WORKSPACE_DIR
+from . import run as run_programmatic
+from .config import DEFAULT_HOST, DEFAULT_PORT
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -30,14 +29,14 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--transport",
-        default="sse",
+        default="stdio",
         choices=["sse", "http", "stdio"],
-        help="Transport mechanism (currently only 'sse').",
+        help="MCP transport (default: stdio; sse is a legacy option).",
     )
     parser.add_argument(
         "--workspace",
         default=None,
-        help="Override workspace directory (default: env MCP_WORKSPACE_DIR or packaged workspace).",
+        help="Workspace directory (default: MCP_WORKSPACE_DIR or ./workspace).",
     )
     return parser
 
@@ -46,11 +45,7 @@ def main(argv: Optional[list[str]] = None) -> None:
     parser = build_parser()
     args = parser.parse_args(argv)
 
-    if args.workspace:
-        # Override via environment for consistency with config module semantics
-        os.environ["MCP_WORKSPACE_DIR"] = args.workspace
-
-    run_programmatic(host=args.host, port=args.port, transport=args.transport)
+    run_programmatic(host=args.host, port=args.port, transport=args.transport, workspace=args.workspace)
 
 
 if __name__ == "__main__":  # pragma: no cover

@@ -8,9 +8,10 @@ Paths are validated & sandboxed inside the configured workspace.
 from __future__ import annotations
 
 import os
+import sys
 
 from .mcp import mcp
-from .config import BASE, DEFAULT_HOST, DEFAULT_PORT
+from .config import configure_workspace, DEFAULT_HOST, DEFAULT_PORT
 from .tools import (
     create_file,
     read_file,
@@ -55,14 +56,17 @@ __all__ = [
 
 
 def run(
-    host: str | None = None, port: int | None = None, transport: str = "sse"
+    host: str | None = None,
+    port: int | None = None,
+    transport: str = "stdio",
+    workspace: str | None = None,
 ) -> None:
     """Run the MCP server."""
     _host = host or os.getenv("MCP_SERVER_HOST", DEFAULT_HOST)
     _port = int(port or os.getenv("MCP_SERVER_PORT", DEFAULT_PORT))
-    print(f"Workspace: {BASE}")
-    print(f"Listening on {_host}:{_port} (transport={transport})")
+    root = configure_workspace(workspace)
+    print(f"Workspace: {root}", file=sys.stderr)
     if transport in {"sse", "http"}:
         mcp.run(transport=transport, host=_host, port=_port)
     else:
-        mcp.run()
+        mcp.run(transport=transport)
