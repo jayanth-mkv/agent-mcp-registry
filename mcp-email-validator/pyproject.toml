@@ -11,6 +11,12 @@ dependencies = [
   "fastmcp>=4.1.4,<5",
 ]
 
+[project.urls]
+Homepage = "https://github.com/jayanth-mkv/agent-mcp-registry"
+Documentation = "https://github.com/jayanth-mkv/agent-mcp-registry/tree/main/mcp-email-validator"
+Repository = "https://github.com/jayanth-mkv/agent-mcp-registry"
+Issues = "https://github.com/jayanth-mkv/agent-mcp-registry/issues"
+
 [project.scripts]
 mcp-email-validator = "mcp_email_validator.cli:main"
 

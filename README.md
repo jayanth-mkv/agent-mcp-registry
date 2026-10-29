@@ -11,56 +11,48 @@ Demo servers, AI clients, and the Postgres agent live in [experimental/](experim
 
 ## Install and run
 
-Requires **Python 3.13+** and [uv](https://docs.astral.sh/uv/getting-started/installation/). These servers are installed from this repository; no PyPI publication is assumed.
-
-```bash
-git clone https://github.com/jayanth-mkv/agent-mcp-registry.git
-cd agent-mcp-registry
-```
+Requires [uv](https://docs.astral.sh/uv/getting-started/installation/) and Git. Choose the server you need; no manual clone or installation of the other MCP is required. uv manages Python 3.13 and an isolated runtime environment.
 
 File Server:
 
 ```bash
-uv sync --project mcp-files --locked --no-dev
-uv run --project mcp-files --locked --no-dev mcp-files --workspace ./workspace
+uvx --python 3.13 --from "git+https://github.com/jayanth-mkv/agent-mcp-registry.git@main#subdirectory=mcp-files" mcp-files --workspace ./workspace
 ```
 
 Email Validator:
 
 ```bash
-uv sync --project mcp-email-validator --locked --no-dev
-uv run --project mcp-email-validator --locked --no-dev mcp-email-validator
+uvx --python 3.13 --from "git+https://github.com/jayanth-mkv/agent-mcp-registry.git@main#subdirectory=mcp-email-validator" mcp-email-validator
 ```
 
-Both default to **stdio** and wait for an MCP client. For a local Streamable HTTP endpoint:
+uv fetches the repository internally but installs only the selected package and its runtime dependencies. To pin the source, replace `main` with a release tag or full commit SHA. Git-based tool installs resolve dependencies from package metadata; use a source checkout with `uv sync --locked` when you need the checked-in dependency lockfile.
 
-```bash
-uv run --project mcp-files --locked --no-dev mcp-files --transport http --workspace ./workspace
-uv run --project mcp-email-validator --locked --no-dev mcp-email-validator --transport http
-```
+Both default to **stdio** and wait for an MCP client. Add `--transport http` to start a local Streamable HTTP endpoint instead: File Server uses `http://127.0.0.1:8000/mcp`, and Email Validator uses `http://127.0.0.1:8003/mcp`.
 
-Run HTTP servers in separate terminals. Endpoints are `http://127.0.0.1:8000/mcp` and `http://127.0.0.1:8003/mcp`.
+Independent PyPI releases are configured through GitHub Actions. The first publication is pending; the GitHub commands above work now. See [publishing and release setup](docs/publishing.md).
 
 ## Connect an MCP client
 
-For clients supporting `mcpServers` configuration, replace the example paths with absolute paths on your machine. On Windows, use forward slashes or escaped backslashes in JSON. The client must be able to find `uv` on its PATH.
+For clients supporting `mcpServers` configuration, copy only the entry you need. Replace the file workspace with an absolute path on your machine. On Windows, use forward slashes or escaped backslashes in JSON. The client must be able to find `uvx` and Git on its PATH.
 
 ```json
 {
   "mcpServers": {
     "files": {
-      "command": "uv",
+      "command": "uvx",
       "args": [
-        "--directory", "/absolute/path/agent-mcp-registry/mcp-files",
-        "run", "--locked", "--no-dev", "mcp-files",
+        "--python", "3.13",
+        "--from", "git+https://github.com/jayanth-mkv/agent-mcp-registry.git@main#subdirectory=mcp-files",
+        "mcp-files",
         "--workspace", "/absolute/path/allowed-files"
       ]
     },
     "email-validator": {
-      "command": "uv",
+      "command": "uvx",
       "args": [
-        "--directory", "/absolute/path/agent-mcp-registry/mcp-email-validator",
-        "run", "--locked", "--no-dev", "mcp-email-validator"
+        "--python", "3.13",
+        "--from", "git+https://github.com/jayanth-mkv/agent-mcp-registry.git@main#subdirectory=mcp-email-validator",
+        "mcp-email-validator"
       ]
     }
   }
@@ -78,6 +70,8 @@ For clients supporting `mcpServers` configuration, replace the example paths wit
 Each Python project has its own manifest and lockfile. Install development dependencies and run its tests:
 
 ```bash
+git clone https://github.com/jayanth-mkv/agent-mcp-registry.git
+cd agent-mcp-registry
 uv sync --project mcp-files --locked
 uv run --project mcp-files --locked pytest mcp-files/tests -q
 uv sync --project mcp-email-validator --locked

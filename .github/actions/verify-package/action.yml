@@ -1,0 +1,47 @@
+name: Verify Python MCP package
+description: Test, build, inspect, and install one independently releasable MCP.
+
+inputs:
+  package:
+    description: Package directory and console command.
+    required: true
+
+outputs:
+  version:
+    description: Validated package version.
+    value: ${{ steps.metadata.outputs.version }}
+
+runs:
+  using: composite
+  steps:
+    - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+      with:
+        version: "0.13.6"
+        python-version: "3.13"
+        enable-cache: false
+    - name: Validate package metadata
+      id: metadata
+      shell: bash
+      env:
+        PACKAGE: ${{ inputs.package }}
+      run: uv run --no-project python .github/scripts/release.py inspect --package "$PACKAGE"
+    - name: Test locked dependencies
+      shell: bash
+      env:
+        PACKAGE: ${{ inputs.package }}
+      run: uv run --project "$PACKAGE" --locked pytest "$PACKAGE/tests" -q
+    - name: Build wheel and source distribution
+      shell: bash
+      env:
+        PACKAGE: ${{ inputs.package }}
+      run: uv build "$PACKAGE" --no-sources --out-dir "dist/$PACKAGE"
+    - name: Check publishable descriptions
+      shell: bash
+      env:
+        PACKAGE: ${{ inputs.package }}
+      run: uvx --from twine==7.0.0 twine check --strict "dist/$PACKAGE/"*
+    - name: Validate distributions and isolated installation
+      shell: bash
+      env:
+        PACKAGE: ${{ inputs.package }}
+      run: uv run --no-project python .github/scripts/release.py check --package "$PACKAGE" --dist "dist/$PACKAGE" --smoke

@@ -2,7 +2,19 @@
 
 An MCP server with 14 tools for managing UTF-8 text files within a configured workspace. No API key or external service is required.
 
-## Install
+## Run without cloning
+
+Requires [uv](https://docs.astral.sh/uv/getting-started/installation/) and Git. uv downloads the selected package and manages Python 3.13 and its dependencies:
+
+```bash
+uvx --python 3.13 --from "git+https://github.com/jayanth-mkv/agent-mcp-registry.git@main#subdirectory=mcp-files" mcp-files --workspace ./workspace
+```
+
+Only this MCP and its runtime dependencies are installed. uv fetches the repository internally; you do not need a local checkout. To pin the source, replace `main` with a release tag or full commit SHA.
+
+PyPI publishing is configured through GitHub Actions under the distribution name `agent-mcp-registry-files`; its command remains `mcp-files`. After the first PyPI release is confirmed, run `uvx --python 3.13 --from agent-mcp-registry-files==0.2.0 mcp-files --workspace ./workspace`. Until then, use the GitHub command above. See the [release guide](https://github.com/jayanth-mkv/agent-mcp-registry/blob/main/docs/publishing.md).
+
+## Install from source
 
 From this directory, with Python 3.13+ and [uv](https://docs.astral.sh/uv/getting-started/installation/):
 
@@ -11,7 +23,7 @@ uv sync --locked --no-dev
 uv run --locked --no-dev mcp-files --workspace ./workspace
 ```
 
-The default transport is stdio. Configure your MCP client using the [repository example](../README.md#connect-an-mcp-client).
+The default transport is stdio. Configure your MCP client using the [repository example](https://github.com/jayanth-mkv/agent-mcp-registry#connect-an-mcp-client).
 
 For Streamable HTTP:
 
@@ -66,6 +78,6 @@ uv run --locked pytest -q
 uv build
 ```
 
-The CLI is now `mcp-files`; the former nested `mcp-server` workspace has been consolidated into this package. AI clients are in [experimental/](../experimental/README.md).
+The CLI is now `mcp-files`; the former nested `mcp-server` workspace has been consolidated into this package. AI clients are in [experimental/](https://github.com/jayanth-mkv/agent-mcp-registry/tree/main/experimental).
 
-Version 0.2.0. Licensed under the [MIT License](LICENSE).
+Version 0.2.0. Licensed under the [MIT License](https://github.com/jayanth-mkv/agent-mcp-registry/blob/main/mcp-files/LICENSE).

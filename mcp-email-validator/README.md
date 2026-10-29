@@ -2,7 +2,19 @@
 
 An MCP server for checking email syntax and DNS mail routes without sending a message. Optional SMTP probing provides a recipient acceptance signal; it does not prove ownership or guarantee delivery.
 
-## Install
+## Run without cloning
+
+Requires [uv](https://docs.astral.sh/uv/getting-started/installation/) and Git. uv downloads the selected package and manages Python 3.13 and its dependencies:
+
+```bash
+uvx --python 3.13 --from "git+https://github.com/jayanth-mkv/agent-mcp-registry.git@main#subdirectory=mcp-email-validator" mcp-email-validator
+```
+
+Only this MCP and its runtime dependencies are installed. uv fetches the repository internally; you do not need a local checkout. To pin the source, replace `main` with a release tag or full commit SHA.
+
+PyPI publishing is configured through GitHub Actions. After the first PyPI release is confirmed, the equivalent versioned command is `uvx --python 3.13 mcp-email-validator@0.2.0`. Until then, use the GitHub command above. See the [release guide](https://github.com/jayanth-mkv/agent-mcp-registry/blob/main/docs/publishing.md).
+
+## Install from source
 
 From this directory, with Python 3.13+ and [uv](https://docs.astral.sh/uv/getting-started/installation/):
 
@@ -11,7 +23,7 @@ uv sync --locked --no-dev
 uv run --locked --no-dev mcp-email-validator
 ```
 
-The default transport is stdio. Configure your MCP client using the [repository example](../README.md#connect-an-mcp-client). No API key is required; DNS checks need network access.
+The default transport is stdio. Configure your MCP client using the [repository example](https://github.com/jayanth-mkv/agent-mcp-registry#connect-an-mcp-client). No API key is required; DNS checks need network access.
 
 For Streamable HTTP:
 
@@ -59,4 +71,4 @@ uv build
 
 Tests mock DNS/SMTP network operations and exercise the installed stdio server. Live recipient acceptance and delivery are separate checks.
 
-Version 0.2.0. Licensed under the [MIT License](LICENSE).
+Version 0.2.0. Licensed under the [MIT License](https://github.com/jayanth-mkv/agent-mcp-registry/blob/main/mcp-email-validator/LICENSE).
